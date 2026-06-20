@@ -13,6 +13,12 @@ enum WorkspaceRole {
   MEMBER
 }
 
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+}
+
 enum Role {
   USER
   ADMIN
@@ -50,6 +56,8 @@ model User {
 
   deletedAt DateTime?
 
+  createdWorkspaces Workspace[] @relation("WorkspaceCreator")
+
   workspaceMembers WorkspaceMember[]
 
   preferences UserPreference?
@@ -82,6 +90,18 @@ model Workspace {
 
   slug String @unique
 
+  description String?
+
+  logo String?
+
+  createdById String
+
+  createdBy User @relation("WorkspaceCreator", fields: [createdById], references: [id])
+
+  invites WorkspaceInvite[]
+
+  settings WorkspaceSettings?
+
   createdAt DateTime @default(now())
 
   updatedAt DateTime @updatedAt
@@ -102,5 +122,37 @@ model WorkspaceMember {
 
   workspace Workspace @relation(fields: [workspaceId], references: [id])
 
+  joinedAt DateTime @default(now())
+
   @@unique([userId, workspaceId])
+}
+
+model WorkspaceInvite {
+  id String @id @default(uuid())
+
+  workspaceId String
+
+  email String
+
+  token String @unique
+
+  status InviteStatus @default(PENDING)
+
+  expiresAt DateTime
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model WorkspaceSettings {
+  id String @id @default(uuid())
+
+  workspaceId String @unique
+
+  defaultModel String @default("gpt-4o")
+
+  allowMemberInvites Boolean @default(false)
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
 }

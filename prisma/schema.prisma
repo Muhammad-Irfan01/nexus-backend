@@ -25,6 +25,20 @@ enum Role {
   SUPER_ADMIN
 }
 
+enum DocumentStatus {
+  UPLOADING
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum EmbeddingStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
 model User {
   id String @id @default(uuid())
 
@@ -65,6 +79,8 @@ model User {
   createdAt DateTime @default(now())
 
   updatedAt DateTime @updatedAt
+
+  uploadedDocuments Document[]
 }
 
 model UserPreference {
@@ -107,6 +123,8 @@ model Workspace {
   updatedAt DateTime @updatedAt
 
   members WorkspaceMember[]
+
+   documents Document[]
 }
 
 model WorkspaceMember {
@@ -155,4 +173,66 @@ model WorkspaceSettings {
   allowMemberInvites Boolean @default(false)
 
   workspace Workspace @relation(fields: [workspaceId], references: [id])
+}
+
+model Document {
+  id String @id @default(uuid())
+
+  workspaceId String
+
+  uploadedById String
+
+  name String
+
+  originalName String
+
+  mimeType String
+
+  size Int
+
+  storagePath String
+
+  status DocumentStatus @default(UPLOADING)
+
+  extractedText String? @db.Text
+
+  processedAt DateTime?
+
+  tokenCount Int?
+
+  embeddingId String?
+
+  embeddingStatus EmbeddingStatus @default(PENDING)
+
+  workspace Workspace @relation( fields: [workspaceId], references: [id])
+
+  uploadedBy User @relation( fields: [uploadedById], references: [id])
+
+  chunks DocumentChunk[]
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+model DocumentChunk {
+  id String @id @default(uuid())
+
+  documentId String
+
+  chunkIndex Int
+
+  content String @db.Text
+
+  tokenCount Int?
+
+  embeddingId String?
+
+  embeddingStatus EmbeddingStatus @default(PENDING)
+
+  qdrantPointId String?
+
+  document Document @relation( fields: [documentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
 }

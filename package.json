@@ -27,17 +27,24 @@
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/passport": "^11.0.5",
-    "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/platform-express": "^11.1.27",
     "@prisma/client": "^6.19.3",
+    "@qdrant/js-client-rest": "^1.18.0",
     "bcrypt": "^6.0.0",
+    "bullmq": "^5.79.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "crypto": "^1.0.1",
     "handlebars": "^4.7.9",
+    "ioredis": "^5.11.1",
+    "mammoth": "^1.12.0",
+    "multer": "^2.2.0",
     "nodemailer": "^9.0.0",
     "nodemon": "^3.1.14",
+    "openai": "^6.44.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
+    "pdf-parse": "^1.1.1",
     "prisma": "^6.19.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
@@ -50,6 +57,7 @@
     "@nestjs/testing": "^11.0.1",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
+    "@types/multer": "^2.1.0",
     "@types/node": "^24.0.0",
     "@types/nodemailer": "^8.0.1",
     "@types/supertest": "^7.0.0",
@@ -70,7 +78,7 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0",
-    "uuid": "^14.0.0"
+    "uuid": "^14.0.1"
   },
   "jest": {
     "moduleFileExtensions": [

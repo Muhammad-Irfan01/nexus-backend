@@ -14,12 +14,13 @@ import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './common/guards/role.guard';
 import { PrismaClient } from '@prisma/client';
 import { DocumentsModule } from './modules/documents/documents.module';
-import { ModuleModule } from './modules/embedding/module/module.module';
-import { EmbeddingModule } from './module/embedding/embedding.module';
 import { EmbeddingModule } from './modules/embedding/embedding.module';
+import { RagModule } from './modules/rag/rag.module';
+import { ChatModule } from './modules/chat/chat.module';
+
 
 @Module({
-  imports: [ ConfigModule.forRoot({ isGlobal: true}), PrismaModule, UsersModule, AuthModule, WorkspaceModule, MailModule, DocumentsModule, ModuleModule, EmbeddingModule],
+  imports: [ ConfigModule.forRoot({ isGlobal: true}), PrismaModule, UsersModule, AuthModule, WorkspaceModule, MailModule, DocumentsModule, EmbeddingModule, RagModule, ChatModule],
   exports: [],
   controllers: [AppController, WorkspaceController],
   providers: [{provide : APP_GUARD, useClass: RolesGuard}, AppService, WorkspaceService],

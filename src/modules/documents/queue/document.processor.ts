@@ -7,6 +7,7 @@ import { TextExtractionService }
 import { PrismaService } from '../../../prisma/prisma.service';
 import { DOCUMENT_QUEUE } from '../constant/document.constants';
 import { ChunkingService } from '../services/chunking.service';
+import { EmbeddingQueueService } from '../../embedding/queues/embeddings.queue.service';
 
 
 
@@ -14,7 +15,8 @@ export class DocumentProcessor {
   constructor(
     private prisma: PrismaService,
     private extractor: TextExtractionService,
-    private chunkingservice: ChunkingService
+    private chunkingservice: ChunkingService,
+    private embeddingQueueService: EmbeddingQueueService
   ) {
     new Worker(
       DOCUMENT_QUEUE,
@@ -58,6 +60,8 @@ export class DocumentProcessor {
         );
 
       const chunks = this.chunkingservice.splitText(text);
+
+      await this.embeddingQueueService.addJob(document.id);
 
       await this.prisma.documentChunk.deleteMany({
         where: {

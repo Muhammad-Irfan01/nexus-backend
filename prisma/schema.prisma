@@ -39,6 +39,11 @@ enum EmbeddingStatus {
   FAILED
 }
 
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
 model User {
   id String @id @default(uuid())
 
@@ -81,6 +86,8 @@ model User {
   updatedAt DateTime @updatedAt
 
   uploadedDocuments Document[]
+
+  conversations Conversation[]
 }
 
 model UserPreference {
@@ -124,7 +131,11 @@ model Workspace {
 
   members WorkspaceMember[]
 
-   documents Document[]
+  documents Document[]
+
+  retrievalLogs RetrievalLog[]
+
+  conversations Conversation[]
 }
 
 model WorkspaceMember {
@@ -233,6 +244,53 @@ model DocumentChunk {
   qdrantPointId String?
 
   document Document @relation( fields: [documentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model RetrievalLog {
+  id String @id @default(uuid())
+
+  workspaceId String
+
+  query String @db.Text
+
+  retrievedChunks Json?
+
+  createdAt DateTime @default(now())
+
+  workspace Workspace @relation(fields:[workspaceId], references:[id], onDelete: Cascade)
+}
+
+model Conversation {
+  id String @id @default(uuid())
+
+  workspaceId String
+
+  title String?
+
+  createdById String
+
+  createdBy User @relation(fields:[createdById], references:[id])
+
+  workspace Workspace @relation(fields:[workspaceId], references:[id])
+
+  messages Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Message {
+  id String @id @default(uuid())
+
+  conversationId String
+
+  role MessageRole
+
+  content String @db.Text
+
+  conversation Conversation @relation( fields:[conversationId], references:[id], onDelete: Cascade )
 
   createdAt DateTime @default(now())
 }

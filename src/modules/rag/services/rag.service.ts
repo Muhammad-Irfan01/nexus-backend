@@ -32,7 +32,7 @@ export class RagService {
         });
 
         return {
-            answer: response.choices[0].message.content,
+            answer: response.choices[0].message.content || '',
                 source: match.map((item: any) => ({chunkId: item.payload.content, documentId: item.payload.documentId}))
             
         }

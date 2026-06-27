@@ -5,10 +5,11 @@ import { DocumentQueueService } from '../queue/document.queue.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { DocumentStatus } from '@prisma/client';
 import * as fs from 'fs/promises';
+import { UsageTrackerService } from '../../analytics/services/usage-tracker.service';
 
 @Injectable()
 export class DocumentsService {
-    constructor( private readonly prisma: PrismaService, private documentQueueService: DocumentQueueService ) {}
+    constructor( private readonly prisma: PrismaService, private documentQueueService: DocumentQueueService, private readonly usageTracker: UsageTrackerService ) {}
 
 
     async uploadDocument(userId: string, workspaceId: string, file: Express.Multer.File) {
@@ -32,6 +33,8 @@ export class DocumentsService {
         })
 
         await this.documentQueueService.addExtractionJob(document.id);
+        
+        await this.usageTracker.track(userId, workspaceId, 'DOCUMENT_UPLOADED', {documentId: document.id});
 
         return document
     }

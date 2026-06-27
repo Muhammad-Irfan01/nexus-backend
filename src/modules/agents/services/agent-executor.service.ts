@@ -2,13 +2,14 @@ import { ForbiddenException, Injectable } from "@nestjs/common";
 import { PrismaService } from "../../../prisma/prisma.service";
 import { RetrivalService } from "../../rag/services/retrieval.service";
 import OpenAI from "openai";
+import { UsageTrackerService } from "../../analytics/services/usage-tracker.service";
 
 
 @Injectable()
 export class AgentExecutorService {
     private openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
-    constructor( private readonly prisma: PrismaService, private readonly retrivalservice: RetrivalService) {}
+    constructor( private readonly prisma: PrismaService, private readonly retrivalservice: RetrivalService, private readonly usageTracker: UsageTrackerService) {}
 
     async executeAgent(agentId: string, userId: string, message: string) {
         const agent = await this.prisma.agent.findUnique({
@@ -47,6 +48,8 @@ export class AgentExecutorService {
                 }
             ]
         })
+
+        await this.usageTracker.track(userId, agent.workspaceId, 'AGENT_MESSAGE', {agentId, message});
 
         return {
             answer: completion.choices[0].message.content || '',

@@ -52,6 +52,14 @@ enum MessageRole {
   CUSTOM
 }
 
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  TRIALING
+  INCOMPLETE
+}
+
 enum UsageEventType {
   DOCUMENT_UPLOADED
   DOCUMENT_PROCESSED
@@ -167,6 +175,8 @@ model Workspace {
   agents Agent[]
 
   usageEvent UsageEvent[]
+
+  subscription Subscription[]
 }
 
 model WorkspaceMember {
@@ -411,4 +421,25 @@ model UsageEvent {
   workspace Workspace @relation(fields:[workspaceId], references:[id], onDelete: Cascade)
 
   user User? @relation(fields:[userId], references:[id], onDelete: SetNull)
+}
+
+model Subscription {
+  id String @id @default(uuid())
+
+  workspaceId String @unique
+
+  stripeCustomerId String
+
+  stripeSubscriptionId String?
+
+  stripePriceId String?
+
+  status SubscriptionStatus
+
+  currentPeriodEnd DateTime?
+
+  workspace Workspace @relation(fields:[workspaceId], references:[id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

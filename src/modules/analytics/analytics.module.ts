@@ -5,7 +5,7 @@ import { UsageTrackerService } from './services/usage-tracker.service';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Module({
-  imports: [PrismaService],
+  // imports: [PrismaService],
   controllers: [AnalyticsController],
   providers: [AnalyticsService, UsageTrackerService],
   exports: [AnalyticsService, UsageTrackerService],

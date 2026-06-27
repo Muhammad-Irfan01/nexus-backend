@@ -6,7 +6,7 @@ import { PrismaService } from "../../../prisma/prisma.service";
 export class UsageTrackerService {
     constructor (private readonly prisma: PrismaService) {}
 
-    async track( userId: string, workspaceId: string, eventType: string, metadata: any) {
+    async track( userId: string, workspaceId: string, eventType: any, metadata: any) {
         await this.prisma.usageEvent.create({
             data: {
                 userId,

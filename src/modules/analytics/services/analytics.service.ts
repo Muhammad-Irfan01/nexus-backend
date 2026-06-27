@@ -55,7 +55,7 @@ export class AnalyticsService {
         await this.validateMembership(userId, workspaceId);
 
         return this.prisma.usageEvent.findMany({
-            hwere: {workspaceId},
+            where: {workspaceId},
             orderBy: {createdAt: 'desc'},
             take: 50,
         })

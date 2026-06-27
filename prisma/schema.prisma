@@ -44,6 +44,27 @@ enum MessageRole {
   ASSISTANT
 }
 
+ enum AgentType {
+  GENERAL
+  SUPPORT
+  SALES
+  HR
+  CUSTOM
+}
+
+enum UsageEventType {
+  DOCUMENT_UPLOADED
+  DOCUMENT_PROCESSED
+
+  EMBEDDING_GENERATED
+
+  CHAT_MESSAGE
+
+  AGENT_MESSAGE
+
+  RAG_QUERY
+}
+
 model User {
   id String @id @default(uuid())
 
@@ -88,6 +109,10 @@ model User {
   uploadedDocuments Document[]
 
   conversations Conversation[]
+
+  aiUsage AIUsage[]
+
+  usageEvent UsageEvent[]
 }
 
 model UserPreference {
@@ -133,9 +158,15 @@ model Workspace {
 
   documents Document[]
 
+  aiUsage AIUsage[]
+
   retrievalLogs RetrievalLog[]
 
   conversations Conversation[]
+
+  agents Agent[]
+
+  usageEvent UsageEvent[]
 }
 
 model WorkspaceMember {
@@ -277,6 +308,8 @@ model Conversation {
 
   messages Message[]
 
+  aiUsage AIUsage[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -293,4 +326,89 @@ model Message {
   conversation Conversation @relation( fields:[conversationId], references:[id], onDelete: Cascade )
 
   createdAt DateTime @default(now())
+}
+
+model Agent {
+  id String @id @default(uuid())
+
+  workspaceId String
+
+  name String
+  description String?
+
+  type AgentType
+
+  systemPrompt String @db.Text
+
+  isActive Boolean @default(true)
+
+  aiUsage AIUsage[]
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AIUsage {
+  id String @id @default(uuid())
+
+  workspaceId String
+
+  userId String
+
+  conversationId String?
+
+  agentId String?
+
+  promptTokens Int @default(0)
+
+  completionTokens Int @default(0)
+
+  totalTokens Int @default(0)
+
+  model String
+
+  createdAt DateTime @default(now())
+
+  workspace Workspace @relation(fields:[workspaceId], references:[id], onDelete: Cascade)
+
+  user User @relation(fields:[userId], references:[id])
+
+  conversation Conversation? @relation(fields:[conversationId], references:[id])
+
+  agent Agent? @relation(fields:[agentId], references:[id])
+}
+
+model DocumentAnalytics {
+  id String @id @default(uuid())
+
+  documentId String @unique
+
+  chunkCount Int @default(0)
+
+  totalTokens Int @default(0)
+
+  embeddingCount Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+model UsageEvent {
+  id String @id @default(uuid())
+
+  workspaceId String
+  userId String?
+
+  eventType UsageEventType
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  workspace Workspace @relation(fields:[workspaceId], references:[id], onDelete: Cascade)
+
+  user User? @relation(fields:[userId], references:[id], onDelete: SetNull)
 }

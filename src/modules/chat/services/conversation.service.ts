@@ -21,12 +21,11 @@ export class ConversationService {
     }
 
     async getWorkspaceConversation(userId: string, workspaceId: string) {
+        
         const member = await this.prisma.workspaceMember.findUnique({
             where: {userId_workspaceId: {userId, workspaceId}}
         })
-
         if(!member) throw new ForbiddenException('You are not a member of this workspace');
-
         return this.prisma.conversation.findMany({
             where: {workspaceId},
             orderBy: {updatedAt: 'desc'}

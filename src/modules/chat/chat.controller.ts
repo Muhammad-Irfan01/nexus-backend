@@ -45,15 +45,15 @@ export class ChatController {
 
   @Get('workspace/:workspaceId/conversations')
   getConversations(
-    @CurrentUser('id')
-    userId: string,
+    @CurrentUser('sub')
+    userId: any,
 
     @Param('workspaceId')
     workspaceId: string,
   ) {
     return this.conversationService
       .getWorkspaceConversation(
-        userId,
+        userId.sub,
         workspaceId,
       );
   }

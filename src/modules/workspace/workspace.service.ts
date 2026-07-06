@@ -52,80 +52,80 @@ export class WorkspaceService {
             where: { id: workspaceId }, include: { settings: true, members: { include: { user: { select: { id: true, email: true, firstName: true, lastName: true, avatar: true } } } } }
         })
 
-        if(!workspace) throw new NotFoundException('Workspace not found');
+        if (!workspace) throw new NotFoundException('Workspace not found');
 
         return workspace;
     }
 
     async updateWorkspace(workspaceId: string, userId: string, dto: UpdateWorkspaceDto) {
         const membership = await this.prisma.workspaceMember.findUnique({
-            where: {userId_workspaceId : {userId, workspaceId} }
+            where: { userId_workspaceId: { userId, workspaceId } }
         })
 
-        const allowedRoles: WorkspaceRole[] = [ WorkspaceRole.OWNER, WorkspaceRole.ADMIN];
+        const allowedRoles: WorkspaceRole[] = [WorkspaceRole.OWNER, WorkspaceRole.ADMIN];
 
-        if(!membership || !allowedRoles.includes(membership.role)) {
+        if (!membership || !allowedRoles.includes(membership.role)) {
             throw new ForbiddenException('Not Allowed');
         }
 
         return this.prisma.workspace.update({
-            where: {id: userId}, data: dto
+            where: { id: userId }, data: dto
         })
     }
 
     async deleteWorkspace(workspaceId: string, userId: string) {
         const membership = await this.prisma.workspaceMember.findUnique({
-            where: {userId_workspaceId: {userId, workspaceId}}
+            where: { userId_workspaceId: { userId, workspaceId } }
         })
 
-        if(!membership || membership.role !== WorkspaceRole.OWNER) {
+        if (!membership || membership.role !== WorkspaceRole.OWNER) {
             throw new ForbiddenException('Only admin can delete workspace');
         }
 
         await this.prisma.workspace.delete({
-            where: {id: workspaceId}
+            where: { id: workspaceId }
         })
 
         return { message: 'Workspace deleted successfully' };
     }
 
     async getMember(userId: string, workspaceId: string) {
-        const membership =  await this.prisma.workspaceMember.findUnique({
+        const membership = await this.prisma.workspaceMember.findUnique({
             where: {
-                userId_workspaceId: {userId, workspaceId}
+                userId_workspaceId: { userId, workspaceId }
             }
         })
 
-        if(!membership) throw new ForbiddenException('You are not a member of this workspace');
+        if (!membership) throw new ForbiddenException('You are not a member of this workspace');
 
         return this.prisma.workspaceMember.findMany({
-            where: {id: workspaceId}, include: {user: {select: {id: true, email: true, firstName: true, lastName: true, avatar: true}} }
+            where: { id: workspaceId }, include: { user: { select: { id: true, email: true, firstName: true, lastName: true, avatar: true } } }
         })
     }
 
     async updateMemberRole(userId: string, workspaceId: string, memberId: string, role: UpdateMemberRoleDto) {
-        const requester = await this.prisma.workspaceMember.findUnique ({
-            where: {userId_workspaceId: {userId, workspaceId}}
+        const requester = await this.prisma.workspaceMember.findUnique({
+            where: { userId_workspaceId: { userId, workspaceId } }
         })
 
-        if(!requester || requester.role !== WorkspaceRole.OWNER) {
+        if (!requester || requester.role !== WorkspaceRole.OWNER) {
             throw new ForbiddenException('Only admin can update member role');
         }
 
         const member = await this.prisma.workspaceMember.findUnique({
-            where: {id: memberId}
+            where: { id: memberId }
         })
 
-        if(!member)  throw new NotFoundException('Member not found');
+        if (!member) throw new NotFoundException('Member not found');
 
         return this.prisma.workspaceMember.update({
-            where: {id: memberId}, data: {role: role.role}
+            where: { id: memberId }, data: { role: role.role }
         })
     }
 
     async removeMember(userId: string, workspaceId: string, memberId: string) {
-        const requester = await this.prisma.workspaceMember.findUnique ({
-            where: {userId_workspaceId: {userId, workspaceId}}
+        const requester = await this.prisma.workspaceMember.findUnique({
+            where: { userId_workspaceId: { userId, workspaceId } }
         })
 
         // if(!requester || requester.role !== WorkspaceRole.OWNER) {
@@ -133,10 +133,10 @@ export class WorkspaceService {
         // }
 
         const member = await this.prisma.workspaceMember.findUnique({
-            where: {id: memberId}
+            where: { id: memberId }
         })
 
-        if(!member)  throw new NotFoundException('Member not found');
+        if (!member) throw new NotFoundException('Member not found');
 
         const memberRole = member.role;
         if (requester?.role === WorkspaceRole.ADMIN && memberRole !== WorkspaceRole.MEMBER) {
@@ -144,16 +144,16 @@ export class WorkspaceService {
         }
 
         return this.prisma.workspaceMember.delete({
-            where: {id: memberId}
+            where: { id: memberId }
         })
     }
 
     async inviteMember(userId: string, workspaceId: string, dto: InviteMemberDto) {
-        const requester =  await this.prisma.workspaceMember.findUnique({
-            where: {userId_workspaceId: {userId, workspaceId}}
+        const requester = await this.prisma.workspaceMember.findUnique({
+            where: { userId_workspaceId: { userId, workspaceId } }
         })
 
-        if(!requester || (requester.role !== WorkspaceRole.ADMIN && requester.role !== WorkspaceRole.OWNER) ) {
+        if (!requester || (requester.role !== WorkspaceRole.ADMIN && requester.role !== WorkspaceRole.OWNER)) {
             throw new ForbiddenException('Only admin or owner can invite member');
         }
 
@@ -163,60 +163,60 @@ export class WorkspaceService {
 
 
         return this.prisma.workspaceInvite.create({
-            data: {workspaceId, email: dto.email, token, expiresAt}
+            data: { workspaceId, email: dto.email, token, expiresAt }
         })
     }
 
     async acceptInvite(userId: string, token: string) {
         const invite = await this.prisma.workspaceInvite.findUnique({
-            where: {token}
+            where: { token }
         })
 
-        if(!invite) throw new NotFoundException('Invite not found');
+        if (!invite) throw new NotFoundException('Invite not found');
 
-        if(invite.expiresAt < new Date()) {
+        if (invite.expiresAt < new Date()) {
             throw new BadRequestException('Invite expired');
         }
 
         const user = await this.prisma.user.findUnique({
-            where: {id: userId}
+            where: { id: userId }
         })
 
-        if(user?.email !== invite.email) throw new NotFoundException('Invalid Email');
+        if (user?.email !== invite.email) throw new NotFoundException('Invalid Email');
 
-        return this.prisma.$transaction(async(tx) => {
+        return this.prisma.$transaction(async (tx) => {
             await tx.workspaceMember.create({
-                data: {userId, workspaceId: invite.workspaceId, role: WorkspaceRole.MEMBER}
+                data: { userId, workspaceId: invite.workspaceId, role: WorkspaceRole.MEMBER }
             })
             return tx.workspaceInvite.update({
-                where: {id: invite.id}, data: {status: 'ACCEPTED'}
+                where: { id: invite.id }, data: { status: 'ACCEPTED' }
             })
         })
     }
 
     async getWorkspaceSetting(userId: string, workspaceId: string) {
         const membership = await this.prisma.workspaceMember.findUnique({
-            where: {userId_workspaceId: {userId, workspaceId}}
+            where: { userId_workspaceId: { userId, workspaceId } }
         })
 
-        if(!membership) throw new ForbiddenException('You are not a member of this workspace');
+        if (!membership) throw new ForbiddenException('You are not a member of this workspace');
 
         return this.prisma.workspaceSettings.findUnique({
-            where: {workspaceId}
+            where: { workspaceId }
         })
     }
 
-    async updateWorkspaceSetting(userId: string, workspaceId: string, dto: {defaultModel?: string, allowMemberInvite: boolean}) {
+    async updateWorkspaceSetting(userId: string, workspaceId: string, dto: { defaultModel?: string, allowMemberInvite: boolean }) {
         const requester = await this.prisma.workspaceMember.findUnique({
-            where: {userId_workspaceId: {userId, workspaceId}}
+            where: { userId_workspaceId: { userId, workspaceId } }
         })
 
-        if(!requester || (requester.role !== WorkspaceRole.ADMIN && requester.role !== WorkspaceRole.OWNER)) {
+        if (!requester || (requester.role !== WorkspaceRole.ADMIN && requester.role !== WorkspaceRole.OWNER)) {
             throw new ForbiddenException('Only admin or owner can update workspace setting');
         }
 
         return this.prisma.workspaceSettings.update({
-            where: {workspaceId}, data: dto
+            where: { workspaceId }, data: dto
         })
     }
 }

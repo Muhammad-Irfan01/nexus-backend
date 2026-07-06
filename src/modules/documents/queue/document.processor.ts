@@ -1,5 +1,6 @@
 import { Worker, Job } from 'bullmq';
 import IORedis from 'ioredis';
+import { Injectable } from '@nestjs/common';
 
 
 import { TextExtractionService }
@@ -10,7 +11,7 @@ import { ChunkingService } from '../services/chunking.service';
 import { EmbeddingQueueService } from '../../embedding/queues/embeddings.queue.service';
 
 
-
+@Injectable()
 export class DocumentProcessor {
   constructor(
     private prisma: PrismaService,
@@ -36,16 +37,19 @@ export class DocumentProcessor {
   async process(
     documentId: string,
   ) {
+    console.log(`[DEBUG] DocumentProcessor.process: starting documentId=${documentId}`);
     const document =
       await this.prisma.document.findUnique({
         where: { id: documentId },
       });
 
     if (!document) {
+      console.log(`[DEBUG] DocumentProcessor.process: document not found documentId=${documentId}`);
       return;
     }
 
     try {
+      console.log(`[DEBUG] DocumentProcessor.process: updating status to PROCESSING`);
       await this.prisma.document.update({
         where: { id: document.id },
         data: {
@@ -58,10 +62,13 @@ export class DocumentProcessor {
           document.storagePath,
           document.mimeType,
         );
+      console.log(`[DEBUG] DocumentProcessor.process: text extracted`);
 
       const chunks = this.chunkingservice.splitText(text);
+      console.log(`[DEBUG] DocumentProcessor.process: text split into ${chunks.length} chunks`);
 
       await this.embeddingQueueService.addJob(document.id);
+      console.log(`[DEBUG] DocumentProcessor.process: embedding job added`);
 
       await this.prisma.documentChunk.deleteMany({
         where: {
@@ -95,7 +102,9 @@ export class DocumentProcessor {
           processedAt: new Date(),
         },
       });
+      console.log(`[DEBUG] DocumentProcessor.process: finished documentId=${documentId}`);
     } catch (error) {
+      console.error(`[DEBUG] DocumentProcessor.process: error documentId=${documentId}`, error);
       await this.prisma.document.update({
         where: { id: document.id },
         data: {

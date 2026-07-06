@@ -26,7 +26,7 @@ export class ChatController {
 
   @Post('workspace/:workspaceId/conversations')
   createConversation(
-    @CurrentUser('id')
+    @CurrentUser('sub')
     userId: string,
 
     @Param('workspaceId')
@@ -40,27 +40,27 @@ export class ChatController {
         userId,
         workspaceId,
         dto.title || '',
-      );
+      ); 
   }
 
   @Get('workspace/:workspaceId/conversations')
   getConversations(
     @CurrentUser('sub')
-    userId: any,
+    userId: string,
 
     @Param('workspaceId')
     workspaceId: string,
   ) {
     return this.conversationService
       .getWorkspaceConversation(
-        userId.sub,
+        userId,
         workspaceId,
       );
   }
 
   @Get('conversations/:conversationId')
   getConversation(
-    @CurrentUser('id')
+    @CurrentUser('sub')
     userId: string,
 
     @Param('conversationId')
@@ -75,7 +75,7 @@ export class ChatController {
 
   @Delete('conversations/:conversationId')
   deleteConversation(
-    @CurrentUser('id')
+    @CurrentUser('sub')
     userId: string,
 
     @Param('conversationId')
@@ -90,7 +90,7 @@ export class ChatController {
 
   @Post('conversations/:conversationId/messages')
   sendMessage(
-    @CurrentUser('id')
+    @CurrentUser('sub')
     userId: string,
 
     @Param('conversationId')

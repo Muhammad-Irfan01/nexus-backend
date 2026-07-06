@@ -12,17 +12,17 @@ export class BillingController {
   }
 
   @Post(':workspaceId/checkout')
-  checkout( @CurrentUser('id') userId: string, @Param('workspaceId') workspaceId: string, @Body() dto: CreateCheckoutDto) {
+  checkout( @CurrentUser('sub') userId: string, @Param('workspaceId') workspaceId: string, @Body() dto: { priceId: string }) {
     return this.billingService.createCheckoutSession(userId, workspaceId, dto.priceId);
   }
 
-  @Post(':workspaceId/portal')
-  portal( @CurrentUser('id') userId: string, @Param('workspaceId') workspaceId: string) {
+  @Get(':workspaceId/portal')
+  portal(@Param('workspaceId') workspaceId: string) {
     return this.billingService.createPortalSession(workspaceId);
   }
 
-  @Get(':workspaceId')
-  subscription( @CurrentUser('id') userId: string, @Param('workspaceId') workspaceId: string) {
+  @Get(':workspaceId/subscription')
+  subscription(@Param('workspaceId') workspaceId: string) {
     return this.billingService.getSubscription(workspaceId);
   }
 }

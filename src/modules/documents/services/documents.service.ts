@@ -43,7 +43,7 @@ export class DocumentsService {
         const membership = await this.prisma.workspaceMember.findUnique({
             where: {userId_workspaceId: {userId, workspaceId}}
         })
-
+        console.log(membership)
         if(!membership) throw new ForbiddenException('You are not a member of this workspace');
 
         return this.prisma.document.findMany({

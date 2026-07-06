@@ -1,12 +1,14 @@
 import { PrismaService } from "../../../prisma/prisma.service";
 import { QdrantService } from "../service/qdrant.service";
 import {Redis} from 'ioredis';
+import { Injectable } from "@nestjs/common";
 
 import { Worker, Job, Queue } from "bullmq";
 import { EMBEDDINGS_QUEUE } from "../constants/embeddings.constants";
 import { EmbeddingService } from "../service/embedding.service";
 
 
+@Injectable()
 export class EmbeddingsProcessor {
      private queue: Queue;
 
@@ -21,8 +23,22 @@ export class EmbeddingsProcessor {
     port: Number(process.env.REDIS_PORT),
   },
 });
+    new Worker(
+      EMBEDDINGS_QUEUE,
+      async (job: Job) => {
+        await this.process(job.data.documentId);
+      },
+      {
+        connection: {
+          host: process.env.REDIS_HOST,
+          port: Number(process.env.REDIS_PORT),
+          maxRetriesPerRequest: null,
+        },
+      },
+    );
   }
   async process(documentId: string) {
+    console.log(`[DEBUG] EmbeddingsProcessor.process: starting documentId=${documentId}`);
     const chunks =
       await this.prisma.documentChunk.findMany({
         where: { documentId },
@@ -30,6 +46,7 @@ export class EmbeddingsProcessor {
 
     for (const chunk of chunks) {
       try {
+        console.log(`[DEBUG] EmbeddingsProcessor.process: processing chunk=${chunk.id}`);
         await this.prisma.documentChunk.update({
           where: { id: chunk.id },
           data: {
@@ -62,6 +79,7 @@ export class EmbeddingsProcessor {
           },
         });
       } catch (err) {
+        console.error(`[DEBUG] EmbeddingsProcessor.process: error chunk=${chunk.id}`, err);
         await this.prisma.documentChunk.update({
           where: { id: chunk.id },
           data: {
@@ -70,5 +88,6 @@ export class EmbeddingsProcessor {
         });
       }
     }
+    console.log(`[DEBUG] EmbeddingsProcessor.process: finished documentId=${documentId}`);
   }
 }

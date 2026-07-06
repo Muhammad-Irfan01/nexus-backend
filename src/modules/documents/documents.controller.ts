@@ -45,7 +45,7 @@ export class DocumentsController {
         },
     }))
      async uploadDocument(
-    @CurrentUser('id') userId: string,
+    @CurrentUser() user: any,
 
     @Param('workspaceId')
     workspaceId: string,
@@ -54,39 +54,39 @@ export class DocumentsController {
     file: Express.Multer.File,
   ) {
     return this.documentservice.uploadDocument(
-      userId,
+      user.sub,
       workspaceId,
       file,
     );
   }
 
   @Get('workspace/:workspaceId')
-  async getWorkspaceDocument (@CurrentUser('id') userId: string, @Param('workspaceId') workspaceId: string) {
-    return this.documentservice.getWorkspaceDocument(userId, workspaceId);
+  async getWorkspaceDocument (@CurrentUser() user: any, @Param('workspaceId') workspaceId: string) {
+    return this.documentservice.getWorkspaceDocument(user.sub, workspaceId);
   }
 
   @Get(':documentId')
-  async getDocumentId( @CurrentUser('id') userId: string, @Param('documentId') documentId: string) {
-    return this.documentservice.getDocumentById(userId, documentId);
+  async getDocumentId( @CurrentUser() user: any, @Param('documentId') documentId: string) {
+    return this.documentservice.getDocumentById(user.sub, documentId);
   }
 
   @Delete(':documentId')
-  async deleteDocument( @CurrentUser('id') userId: string, @Param('documentId') documentId: string) {
-    return this.documentservice.deleteDocument(userId, documentId);
+  async deleteDocument( @CurrentUser() user: any, @Param('documentId') documentId: string) {
+    return this.documentservice.deleteDocument(user.sub, documentId);
   }
 
   @Post(':documentId/retry')
-  async retryProcessing( @CurrentUser('id') userId: string, @Param('documentId') documentId: string) {
-    return this.documentservice.retryProcessing(userId, documentId);
+  async retryProcessing( @CurrentUser() user: any, @Param('documentId') documentId: string) {
+    return this.documentservice.retryProcessing(user.sub, documentId);
   }
 
   @Get(':documentId/chunks')
-  async getDocumentChunks( @CurrentUser('id') userId: string, @Param('documentId') documentId: string) {
-    return this.documentservice.getDocumentChunks(userId, documentId);
+  async getDocumentChunks( @CurrentUser() user: any, @Param('documentId') documentId: string) {
+    return this.documentservice.getDocumentChunks(user.sub, documentId);
   }
 
   @Get(':documentId/stats')
-  async getDocumentStats( @CurrentUser('id') userId: string, @Param('documentId') documentId: string) {
-    return this.documentservice.getDocumentStats(userId, documentId);
+  async getDocumentStats( @CurrentUser() user: any, @Param('documentId') documentId: string) {
+    return this.documentservice.getDocumentStats(user.sub, documentId);
   }
 }

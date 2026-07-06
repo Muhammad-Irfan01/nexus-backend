@@ -26,7 +26,7 @@ export class EmbeddingsController {
    */
   @Post('document/:documentId/generate')
   async generateEmbeddings(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('sub') userId: string,
     @Param('documentId') documentId: string,
   ) {
     // Validate document ownership via workspace
@@ -68,7 +68,7 @@ export class EmbeddingsController {
    */
   @Get('document/:documentId/status')
   async getEmbeddingStatus(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('sub') userId: string,
     @Param('documentId') documentId: string,
   ) {
     const document =
@@ -140,7 +140,7 @@ export class EmbeddingsController {
    */
   @Post('document/:documentId/retry')
   async retryEmbeddings(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('sub') userId: string,
     @Param('documentId') documentId: string,
   ) {
     const document =

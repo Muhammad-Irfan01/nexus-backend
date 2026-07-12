@@ -7,10 +7,10 @@ import { QdrantService } from "../../embedding/service/qdrant.service";
 export class RetrivalService {
     constructor( private embedding: EmbeddingService, private qdrant: QdrantService) {}
 
-    async retrive( question: string, limit = 5) {
+    async retrive(question: string, limit = 5, documentIds?: string[]) {
         const vector = await this.embedding.generateEnbedding(question);
 
-        const res = await this.qdrant.search(vector, limit);
+        const res = await this.qdrant.search(vector, limit, documentIds);
 
         return res;
     }

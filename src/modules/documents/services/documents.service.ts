@@ -147,4 +147,17 @@ export class DocumentsService {
       
     };
   }
+
+  async getAllChunks() { 
+  const document = await this.prisma.documentChunk.findMany({
+      select: {
+          id: true,
+          documentId: true,
+          chunkIndex: true,
+          content: true,
+        },
+    });
+    console.log(document)
+  return document
+}
 }

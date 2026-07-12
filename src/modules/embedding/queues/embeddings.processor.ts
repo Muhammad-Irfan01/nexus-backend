@@ -1,6 +1,6 @@
 import { PrismaService } from "../../../prisma/prisma.service";
 import { QdrantService } from "../service/qdrant.service";
-import {Redis} from 'ioredis';
+import { Redis } from 'ioredis';
 import { Injectable } from "@nestjs/common";
 
 import { Worker, Job, Queue } from "bullmq";
@@ -10,7 +10,7 @@ import { EmbeddingService } from "../service/embedding.service";
 
 @Injectable()
 export class EmbeddingsProcessor {
-     private queue: Queue;
+  private queue: Queue;
 
   constructor(
     private prisma: PrismaService,
@@ -18,11 +18,11 @@ export class EmbeddingsProcessor {
     private qdrant: QdrantService,
   ) {
     this.queue = new Queue(EMBEDDINGS_QUEUE, {
-  connection: {
-    host: process.env.REDIS_HOST,
-    port: Number(process.env.REDIS_PORT),
-  },
-});
+      connection: {
+        host: process.env.REDIS_HOST,
+        port: Number(process.env.REDIS_PORT),
+      },
+    });
     new Worker(
       EMBEDDINGS_QUEUE,
       async (job: Job) => {
@@ -43,6 +43,14 @@ export class EmbeddingsProcessor {
       await this.prisma.documentChunk.findMany({
         where: { documentId },
       });
+
+    if (chunks.length === 0) {
+      // Don't silently "succeed" with nothing to do — this usually means
+      // the job ran before chunks were persisted, or extraction produced
+      // no text. Throwing lets BullMQ's attempts/backoff actually retry.
+      console.error(`[DEBUG] EmbeddingsProcessor.process: no chunks found for documentId=${documentId}`);
+      throw new Error(`No document chunks found for document ${documentId}`);
+    }
 
     for (const chunk of chunks) {
       try {

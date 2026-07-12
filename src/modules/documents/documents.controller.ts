@@ -80,10 +80,16 @@ export class DocumentsController {
     return this.documentservice.retryProcessing(user.sub, documentId);
   }
 
-  @Get(':documentId/chunks')
-  async getDocumentChunks( @CurrentUser() user: any, @Param('documentId') documentId: string) {
-    return this.documentservice.getDocumentChunks(user.sub, documentId);
+  @Get('chunks')
+  @UseGuards(JwtAuthGuard)
+  async getChunks(@CurrentUser() user: any) {
+    return this.documentservice.getAllChunks();
   }
+
+  // @Get(':documentId/chunks')
+  // async getDocumentChunks( @CurrentUser() user: any, @Param('documentId') documentId: string) {
+  //   return this.documentservice.getDocumentChunks(user.sub, documentId);
+  // }
 
   @Get(':documentId/stats')
   async getDocumentStats( @CurrentUser() user: any, @Param('documentId') documentId: string) {

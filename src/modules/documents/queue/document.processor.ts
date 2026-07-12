@@ -67,9 +67,6 @@ export class DocumentProcessor {
       const chunks = this.chunkingservice.splitText(text);
       console.log(`[DEBUG] DocumentProcessor.process: text split into ${chunks.length} chunks`);
 
-      await this.embeddingQueueService.addJob(document.id);
-      console.log(`[DEBUG] DocumentProcessor.process: embedding job added`);
-
       await this.prisma.documentChunk.deleteMany({
         where: {
           documentId: document.id,
@@ -92,6 +89,12 @@ export class DocumentProcessor {
           })
         ),
       });
+
+      // Enqueue embedding job only AFTER chunks are persisted,
+      // otherwise the worker can pick up the job before the rows exist
+      // and silently process zero chunks (no error is thrown either way).
+      await this.embeddingQueueService.addJob(document.id);
+      console.log(`[DEBUG] DocumentProcessor.process: embedding job added`);
 
 
       await this.prisma.document.update({

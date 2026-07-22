@@ -8,11 +8,12 @@ import { EmbeddingModule } from '../embedding/embedding.module';
 import { RetrivalService } from './services/retrieval.service';
 import { EmbeddingService } from '../embedding/service/embedding.service';
 import { AnalyticsModule } from '../analytics/analytics.module';
+import { AgentsModule } from '../agents/agents.module';
 
 @Module({
   imports: [EmbeddingModule, PrismaModule, AnalyticsModule],
   controllers: [RagController],
   providers: [RagService, RetrivalService, PromptBuilderService, EmbeddingService],
-  exports: [RagService]
+  exports: [RagService, RetrivalService]
 })
 export class RagModule {}

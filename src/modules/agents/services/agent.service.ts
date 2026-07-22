@@ -24,7 +24,7 @@ export class agentService {
             }
         })
     }
-
+ 
     async getAgents(userId: string, workspaceId: string) {
         const membership = await this.prisma.workspaceMember.findUnique({
             where: {userId_workspaceId: {userId, workspaceId}}

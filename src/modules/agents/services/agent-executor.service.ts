@@ -24,7 +24,14 @@ export class AgentExecutorService {
 
         if(!membership) throw new ForbiddenException('You are not a member of this workspace');
 
-        const content = await this.retrivalservice.retrive(message, 5);
+        const workspaceDocuments = await this.prisma.document.findMany({
+            where: { workspaceId: agent.workspaceId },
+            select: { id: true },
+        });
+
+        const workspaceDocumentIds = workspaceDocuments.map(doc => doc.id);
+
+        const content = await this.retrivalservice.retrive(message, 5, workspaceDocumentIds);
 
         const context = content.map((item: any) => item.payload.content).join('\n\n');
 

@@ -17,22 +17,22 @@ export class AgentsController {
 
     @Get('workspace/:workspaceId')
     async getAgents( @CurrentUser('sub') userId: string, @Param('workspaceId') workspaceId: string) {
-        return this.agentservice.getAgents(workspaceId, userId);
+        return this.agentservice.getAgents(userId, workspaceId,);
     }
 
     @Get(':agentId')
     async getAgent( @CurrentUser('sub') userId: string, @Param('agentId') agentId: string) {
-        return this.agentservice.getAgent(agentId, userId);
+        return this.agentservice.getAgent(userId, agentId);
     }
 
     @Patch(':agentId')
     async updateAgent( @CurrentUser('sub') userId: string, @Param('agentId') agentId: string, @Body() dto: CreateAgentDto) {
-        return this.agentservice.updateAgent(agentId, userId, dto);
+        return this.agentservice.updateAgent(userId, agentId, dto);
     }
 
     @Delete(':agentId')
     async deleteAgent( @CurrentUser('sub') userId: string, @Param('agentId') agentId: string) {
-        return this.agentservice.deleteAgent(agentId, userId);
+        return this.agentservice.deleteAgent(userId, agentId);
     }
 
     @Post(':agentId/execute')

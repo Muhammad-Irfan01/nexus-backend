@@ -51,6 +51,36 @@ export class AnalyticsService {
         });
     }
 
+    async getUsageOverTime(userId: string, workspaceId: string) {
+        await this.validateMembership(userId, workspaceId);
+
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        const events = await this.prisma.usageEvent.findMany({
+            where: {
+                workspaceId,
+                createdAt: {
+                    gte: thirtyDaysAgo,
+                },
+            },
+            select: {
+                createdAt: true,
+            },
+            orderBy: {
+                createdAt: 'asc',
+            },
+        });
+
+        const data = events.reduce((acc, event) => {
+            const date = event.createdAt.toISOString().split('T')[0];
+            acc[date] = (acc[date] || 0) + 1;
+            return acc;
+        }, {} as Record<string, number>);
+
+        return Object.entries(data).map(([date, count]) => ({ date, count }));
+    }
+
     async recentActivity (userId: string, workspaceId: string) {
         await this.validateMembership(userId, workspaceId);
 

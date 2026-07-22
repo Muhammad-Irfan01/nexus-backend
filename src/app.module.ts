@@ -20,10 +20,11 @@ import { ChatModule } from './modules/chat/chat.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { AgentsModule } from './modules/agents/agents.module';
+import { CryptoModule } from './modules/crypto/crypto.module';
 
 
 @Module({
-  imports: [ ConfigModule.forRoot({ isGlobal: true}), PrismaModule, UsersModule, AuthModule, AgentsModule, WorkspaceModule, MailModule, DocumentsModule, EmbeddingModule, RagModule, ChatModule, AnalyticsModule, BillingModule],
+  imports: [ ConfigModule.forRoot({ isGlobal: true}), PrismaModule, UsersModule, AuthModule, AgentsModule, CryptoModule, WorkspaceModule, MailModule, DocumentsModule, EmbeddingModule, RagModule, ChatModule, AnalyticsModule, BillingModule],
   exports: [],
   controllers: [AppController, WorkspaceController],
   providers: [{provide : APP_GUARD, useClass: RolesGuard}, AppService, WorkspaceService],

@@ -1,6 +1,7 @@
 import {
   ForbiddenException,
   Injectable,
+  InternalServerErrorException,
 } from '@nestjs/common';
 
 import { StripeService }
@@ -79,10 +80,10 @@ export class BillingService {
         ],
 
         success_url:
-          process.env.STRIPE_SUCCESS_URL,
+          process.env.STRIPE_SUCCESS_URL!,
 
         cancel_url:
-          process.env.STRIPE_CANCEL_URL,
+          process.env.STRIPE_CANCEL_URL!,
       });
 
     return {
@@ -100,18 +101,27 @@ export class BillingService {
         },
       });
 
-    const session =
-      await this.stripeService.client.billingPortal.sessions.create({
-        customer:
-          subscription!.stripeCustomerId,
+    if (!subscription) {
+        throw new InternalServerErrorException('Subscription not found');
+    }
 
-        return_url:
-          process.env.STRIPE_SUCCESS_URL,
-      });
+    try {
+        const session =
+        await this.stripeService.client.billingPortal.sessions.create({
+            customer:
+            subscription.stripeCustomerId,
 
-    return {
-      url: session.url
-    };
+            return_url:
+            process.env.STRIPE_SUCCESS_URL!,
+        });
+
+        return {
+            url: session.url
+        };
+    } catch (error) {
+        console.error('Stripe Portal Error:', error);
+        throw new InternalServerErrorException('Failed to create portal session');
+    }
   }
 
   async getSubscription(

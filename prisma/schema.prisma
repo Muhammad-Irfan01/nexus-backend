@@ -175,9 +175,11 @@ model Workspace {
   agents Agent[]
 
   usageEvent UsageEvent[]
-
   subscription Subscription[]
-}
+  apiKeys ApiKey[]
+  accessProtocols AccessProtocol[]
+  }
+
 
 model WorkspaceMember {
   id String @id @default(uuid())
@@ -440,6 +442,25 @@ model Subscription {
 
   workspace Workspace @relation(fields:[workspaceId], references:[id], onDelete: Cascade)
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ApiKey {
+  id String @id @default(uuid())
+  name String
+  key String @unique
+  workspaceId String
+  workspace Workspace @relation(fields:[workspaceId], references:[id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model AccessProtocol {
+  id String @id @default(uuid())
+  name String
+  configuration Json
+  workspaceId String
+  workspace Workspace @relation(fields:[workspaceId], references:[id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

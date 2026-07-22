@@ -16,7 +16,7 @@ export class BillingController {
     return this.billingService.createCheckoutSession(userId, workspaceId, dto.priceId);
   }
 
-  @Get(':workspaceId/portal')
+  @Post(':workspaceId/portal')
   portal(@Param('workspaceId') workspaceId: string) {
     return this.billingService.createPortalSession(workspaceId);
   }

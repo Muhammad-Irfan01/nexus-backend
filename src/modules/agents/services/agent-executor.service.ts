@@ -31,9 +31,10 @@ export class AgentExecutorService {
 
         const workspaceDocumentIds = workspaceDocuments.map(doc => doc.id);
 
-        const content = await this.retrivalservice.retrive(message, 5, workspaceDocumentIds);
+        const contentResponse = await this.retrivalservice.retrive(message, 5, workspaceDocumentIds);
+        const results = Array.isArray(contentResponse) ? contentResponse : (contentResponse?.points || []);
 
-        const context = content.map((item: any) => item.payload.content).join('\n\n');
+        const context = results.map((item: any) => item.payload.content).join('\n\n');
 
         const prompt =  `${agent.systemPrompt}
 
@@ -60,7 +61,7 @@ export class AgentExecutorService {
 
         return {
             answer: completion.choices[0].message.content || '',
-            sources: content.map((item: any) => ({
+            sources: results.map((item: any) => ({
                 documentId: item.payload.documentId,
                 chunkId: item.payload.chunkId,
             }))

@@ -51,8 +51,8 @@ import { QdrantClient } from "@qdrant/js-client-rest";
             
             console.log(`[DEBUG] QdrantService.search: vector length=${vector.length}, limit=${limit}, filter=${JSON.stringify(filter)}`);
 
-            return this.client.search(this.COLLECTION, {
-                vector,
+            return this.client.query(this.COLLECTION, {
+                query: vector,
                 limit,
                 with_payload: true,
                 ...filter,

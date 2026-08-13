@@ -23,7 +23,7 @@ export class RagService {
         // Filter by workspace at the Qdrant query level instead of fetching
         // 20 global matches and hoping enough of them belong to this workspace.
         const rawResults = await this.retrival.retrive(question, 20, workspaceDocumentIds);
-        const results = Array.isArray(rawResults) ? rawResults : [];
+        const results = Array.isArray(rawResults) ? rawResults : (rawResults?.points || []);
         console.log(`[DEBUG] RagService.ask: Qdrant search returned ${results.length} results.`);
 
         const filteredMatch = (results as any[]).filter(

@@ -68,6 +68,7 @@ export class EmbeddingsProcessor {
           await this.embeddings.generateEnbedding(
             chunk.content,
           );
+        console.log(`[DEBUG] EmbeddingsProcessor.process: generated embedding for chunk=${chunk.id}`);
 
         const pointId = chunk.id;
 
@@ -80,6 +81,7 @@ export class EmbeddingsProcessor {
             content: chunk.content,
           },
         );
+        console.log(`[DEBUG] EmbeddingsProcessor.process: upserted to Qdrant for chunk=${chunk.id}`);
 
         await this.prisma.documentChunk.update({
           where: { id: chunk.id },
@@ -88,6 +90,7 @@ export class EmbeddingsProcessor {
             qdrantPointId: pointId,
           },
         });
+        console.log(`[DEBUG] EmbeddingsProcessor.process: marked completed in DB for chunk=${chunk.id}`);
       } catch (err) {
         console.error(`[DEBUG] EmbeddingsProcessor.process: error chunk=${chunk.id}`, err);
         await this.prisma.documentChunk.update({

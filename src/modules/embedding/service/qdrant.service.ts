@@ -45,13 +45,17 @@ import { QdrantClient } from "@qdrant/js-client-rest";
 
         async search(vector: number[], limit = 5, documentIds?: string[]) {
             await this.ensureCollection();
+            const filter = documentIds && documentIds.length > 0
+                ? { filter: { must: [{ key: 'documentId', match: { any: documentIds } }] } }
+                : {};
+            
+            console.log(`[DEBUG] QdrantService.search: vector length=${vector.length}, limit=${limit}, filter=${JSON.stringify(filter)}`);
+
             return this.client.search(this.COLLECTION, {
                 vector,
                 limit,
                 with_payload: true,
-                ...(documentIds && documentIds.length > 0
-                    ? { filter: { must: [{ key: 'documentId', match: { any: documentIds } }] } }
-                    : {}),
+                ...filter,
             });
         }
 

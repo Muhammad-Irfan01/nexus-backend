@@ -18,16 +18,32 @@ export class RagService {
             select: { id: true }
         });
         const workspaceDocumentIds = workspaceDocuments.map(doc => doc.id);
+        console.log(`[DEBUG] RagService.ask: workspaceId=${workspaceId}, found ${workspaceDocuments.length} documents. IDs: ${workspaceDocumentIds}`);
 
         // Filter by workspace at the Qdrant query level instead of fetching
         // 20 global matches and hoping enough of them belong to this workspace.
-        const match = await this.retrival.retrive(question, 20, workspaceDocumentIds);
+        const rawResults = await this.retrival.retrive(question, 20, workspaceDocumentIds);
+        const results = Array.isArray(rawResults) ? rawResults : [];
+        console.log(`[DEBUG] RagService.ask: Qdrant search returned ${results.length} results.`);
 
-        const filteredMatch = (match as any[]).filter(
+        const filteredMatch = (results as any[]).filter(
             (item: any) => workspaceDocumentIds.includes(item.payload.documentId),
         );
+        console.log(`[DEBUG] RagService.ask: After filtering, ${filteredMatch.length} results remain.`);
 
         if (filteredMatch.length === 0) {
+            // Check if there are documents in the workspace that are still PROCESSING
+            const processingDocuments = await this.Prisma.document.count({
+                where: { workspaceId, status: 'PROCESSING' }
+            });
+
+            if (processingDocuments > 0) {
+                 return {
+                    answer: 'The system is still processing your documents. Please try again in a few moments.',
+                    source: [],
+                };
+            }
+
             await this.usageTracker.track(userId, workspaceId, 'RAG_QUERY', { question });
             return {
                 answer: 'I could not find that information in the uploaded documents.',

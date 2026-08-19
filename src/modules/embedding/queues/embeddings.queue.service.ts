@@ -1,25 +1,11 @@
 import { Injectable } from "@nestjs/common";
-import { Queue } from "bullmq";
-import IORedis from "ioredis";
-import { EMBEDDINGS_QUEUE } from "../constants/embeddings.constants";
+import { QStashService } from "../../../common/qstash/qstash.service";
 
 @Injectable()
 export class EmbeddingQueueService {
-    private queue: Queue;
-
-    constructor() {
-       this.queue = new Queue(EMBEDDINGS_QUEUE, {
-    connection: {
-        host: process.env.REDIS_HOST,
-        port: Number(process.env.REDIS_PORT),
-        password: process.env.REDIS_PASSWORD,
-    },
-});
-    }
+    constructor(private readonly qstash: QStashService) {}
 
     async addJob(documentId: string) {
-        await this.queue.add('generate', { documentId }, {
-            attempts: 3, backoff: { type: 'exponential', delay: 5000 }
-        });
+        await this.qstash.publish('/webhooks/embeddings/process', { documentId });
     }
 }

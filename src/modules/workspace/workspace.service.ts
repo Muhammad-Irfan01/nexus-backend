@@ -69,7 +69,7 @@ export class WorkspaceService {
         }
 
         return this.prisma.workspace.update({
-            where: { id: userId }, data: dto
+            where: { id: workspaceId }, data: dto
         })
     }
 

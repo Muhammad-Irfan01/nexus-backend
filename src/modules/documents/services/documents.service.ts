@@ -4,12 +4,17 @@ import { Express } from 'express';
 import { DocumentQueueService } from '../queue/document.queue.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { DocumentStatus } from '@prisma/client';
-import * as fs from 'fs/promises';
 import { UsageTrackerService } from '../../analytics/services/usage-tracker.service';
+import { SupabaseStorageService } from './supabase-storage.service';
 
 @Injectable()
 export class DocumentsService {
-    constructor( private readonly prisma: PrismaService, private documentQueueService: DocumentQueueService, private readonly usageTracker: UsageTrackerService ) {}
+    constructor( 
+        private readonly prisma: PrismaService, 
+        private documentQueueService: DocumentQueueService, 
+        private readonly usageTracker: UsageTrackerService,
+        private readonly supabaseStorage: SupabaseStorageService
+    ) {}
 
 
     async uploadDocument(userId: string, workspaceId: string, file: Express.Multer.File) {
@@ -19,15 +24,18 @@ export class DocumentsService {
 
         if(!membership) throw new ForbiddenException('You are not a member of this workspace');
 
+        const fileName = `${Date.now()}-${file.originalname}`;
+        const storagePath = await this.supabaseStorage.upload(fileName, file.buffer, file.mimetype);
+
         const document = await this.prisma.document.create({
             data: {
                 workspaceId,
                 uploadedById: userId,
-                name: file.filename,
+                name: fileName,
                 originalName: file.originalname,
                 size: file.size,
                 mimeType: file.mimetype,
-                storagePath: file.path,
+                storagePath: storagePath,
                 status: DocumentStatus.PROCESSING,
             }
         })
@@ -82,9 +90,9 @@ export class DocumentsService {
         if(!membership) throw new ForbiddenException('You are not a member of this workspace');
 
         try {
-            await fs.unlink(document.storagePath);
+            await this.supabaseStorage.delete(document.storagePath);
         } catch (error: any) {
-            console.log('File already deletde', error.message)
+            console.log('File already deleted from storage', error.message)
         }
 
         await this.prisma.document.delete({

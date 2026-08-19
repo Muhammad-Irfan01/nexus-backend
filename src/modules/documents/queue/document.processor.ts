@@ -1,12 +1,7 @@
-import { Worker, Job } from 'bullmq';
-import IORedis from 'ioredis';
 import { Injectable } from '@nestjs/common';
-
-
 import { TextExtractionService }
   from '../services/text-extraction.service';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { DOCUMENT_QUEUE } from '../constant/document.constants';
 import { ChunkingService } from '../services/chunking.service';
 import { EmbeddingQueueService } from '../../embedding/queues/embeddings.queue.service';
 
@@ -18,22 +13,7 @@ export class DocumentProcessor {
     private extractor: TextExtractionService,
     private chunkingservice: ChunkingService,
     private embeddingQueueService: EmbeddingQueueService
-  ) {
-    new Worker(
-      DOCUMENT_QUEUE,
-      async (job: Job) => {
-        await this.process(job.data.documentId);
-      },
-      {
-        connection: {
-          host: process.env.REDIS_HOST,
-          port: Number(process.env.REDIS_PORT),
-          password: process.env.REDIS_PASSWORD,
-          maxRetriesPerRequest: null,
-        },
-      },
-    );
-  }
+  ) {}
 
   async process(
     documentId: string,

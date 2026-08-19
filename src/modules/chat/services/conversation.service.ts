@@ -21,7 +21,6 @@ export class ConversationService {
     }
 
     async getWorkspaceConversation(userId: string, workspaceId: string) {
-        
         const member = await this.prisma.workspaceMember.findUnique({
             where: {userId_workspaceId: {userId, workspaceId}}
         })

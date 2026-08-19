@@ -1,13 +1,12 @@
 import { Injectable } from "@nestjs/common";
-import * as fs from 'fs/promises';
-// import * as pdf from 'pdf-parse';
 import * as mammoth from 'mammoth';
 import pdf from 'pdf-parse';
+import { SupabaseStorageService } from './supabase-storage.service';
 
 
 @Injectable()
 export class TextExtractionService {
-    constructor() { }
+    constructor(private readonly supabaseStorage: SupabaseStorageService) { }
 
     async extractText(filePath: string, mimeType: string): Promise<string> {
         switch (mimeType) {
@@ -30,7 +29,7 @@ export class TextExtractionService {
     private async extractPdf(
         filePath: string,
     ): Promise<string> {
-        const buffer = await fs.readFile(filePath);
+        const buffer = await this.supabaseStorage.download(filePath);
 
         const data = await pdf(buffer);
 
@@ -40,9 +39,10 @@ export class TextExtractionService {
     private async extractDocx(
         filePath: string,
     ): Promise<string> {
+        const buffer = await this.supabaseStorage.download(filePath);
         const result =
             await mammoth.extractRawText({
-                path: filePath,
+                buffer: buffer,
             });
 
         return result.value;
@@ -51,6 +51,7 @@ export class TextExtractionService {
     private async extractTxt(
         filePath: string,
     ): Promise<string> {
-        return fs.readFile(filePath, 'utf8');
+        const buffer = await this.supabaseStorage.download(filePath);
+        return buffer.toString('utf8');
     }
 }

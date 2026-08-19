@@ -1,8 +1,7 @@
 import { Controller, Delete, Get, Param, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { extname } from 'path';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
+import { memoryStorage } from 'multer';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { DocumentsService } from './services/documents.service';
 
@@ -13,12 +12,7 @@ export class DocumentsController {
 
     @Post('workspace/:workspaceId/upload')
     @UseInterceptors(FileInterceptor('file', {
-        storage: diskStorage({
-            destination: './uploads', filename: (req, file, callback) => {
-                const unique = Date.now() + '-' + Math.round(Math.random() * 1E9);
-                callback(null, unique + extname(file.originalname));
-            },
-        }),
+        storage: memoryStorage(),
         fileFilter: (req, file, callback) => {
             const allowedMimeTypes = [
                 'application/pdf',

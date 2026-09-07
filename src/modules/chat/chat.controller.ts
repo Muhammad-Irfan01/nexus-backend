@@ -14,14 +14,12 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { SendMessageDto } from './dto/send-message.dto';
 
-
 @Controller('chat')
 @UseGuards(JwtAuthGuard)
 export class ChatController {
   constructor(
     private readonly chatService: ChatService,
-    private readonly conversationService:
-      ConversationService,
+    private readonly conversationService: ConversationService,
   ) {}
 
   @Post('workspace/:workspaceId/conversations')
@@ -35,12 +33,11 @@ export class ChatController {
     @Body()
     dto: CreateConversationDto,
   ) {
-    return this.conversationService
-      .createConversation(
-        userId,
-        workspaceId,
-        dto.title || '',
-      ); 
+    return this.conversationService.createConversation(
+      userId,
+      workspaceId,
+      dto.title || '',
+    );
   }
 
   @Get('workspace/:workspaceId/conversations')
@@ -51,11 +48,10 @@ export class ChatController {
     @Param('workspaceId')
     workspaceId: string,
   ) {
-    return this.conversationService
-      .getWorkspaceConversation(
-        userId,
-        workspaceId,
-      );
+    return this.conversationService.getWorkspaceConversation(
+      userId,
+      workspaceId,
+    );
   }
 
   @Get('conversations/:conversationId')
@@ -66,11 +62,7 @@ export class ChatController {
     @Param('conversationId')
     conversationId: string,
   ) {
-    return this.conversationService
-      .getConversation(
-        userId,
-        conversationId,
-      );
+    return this.conversationService.getConversation(userId, conversationId);
   }
 
   @Delete('conversations/:conversationId')
@@ -81,11 +73,7 @@ export class ChatController {
     @Param('conversationId')
     conversationId: string,
   ) {
-    return this.conversationService
-      .deleteConversation(
-        userId,
-        conversationId,
-      );
+    return this.conversationService.deleteConversation(userId, conversationId);
   }
 
   @Post('conversations/:conversationId/messages')
@@ -99,10 +87,6 @@ export class ChatController {
     @Body()
     dto: SendMessageDto,
   ) {
-    return this.chatService.sendMessage(
-      userId,
-      conversationId,
-      dto.message,
-    );
+    return this.chatService.sendMessage(userId, conversationId, dto.message);
   }
 }

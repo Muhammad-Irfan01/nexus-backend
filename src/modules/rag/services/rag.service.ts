@@ -7,78 +7,108 @@ import { UsageTrackerService } from '../../analytics/services/usage-tracker.serv
 
 @Injectable()
 export class RagService {
-    private openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  private openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-    constructor( private Prisma: PrismaService, private retrival: RetrivalService, private promprbuilder: PromptBuilderService, private readonly usageTracker: UsageTrackerService) {}
+  constructor(
+    private Prisma: PrismaService,
+    private retrival: RetrivalService,
+    private promprbuilder: PromptBuilderService,
+    private readonly usageTracker: UsageTrackerService,
+  ) {}
 
-    async ask(userId: string, question: string, workspaceId: string) {
+  async ask(userId: string, question: string, workspaceId: string) {
+    const workspaceDocuments = await this.Prisma.document.findMany({
+      where: { workspaceId },
+      select: { id: true },
+    });
+    const workspaceDocumentIds = workspaceDocuments.map((doc) => doc.id);
+    console.log(
+      `[DEBUG] RagService.ask: workspaceId=${workspaceId}, found ${workspaceDocuments.length} documents. IDs: ${workspaceDocumentIds}`,
+    );
 
-        const workspaceDocuments = await this.Prisma.document.findMany({
-            where: { workspaceId },
-            select: { id: true }
-        });
-        const workspaceDocumentIds = workspaceDocuments.map(doc => doc.id);
-        console.log(`[DEBUG] RagService.ask: workspaceId=${workspaceId}, found ${workspaceDocuments.length} documents. IDs: ${workspaceDocumentIds}`);
+    // Filter by workspace at the Qdrant query level instead of fetching
+    // 20 global matches and hoping enough of them belong to this workspace.
+    const rawResults = await this.retrival.retrive(
+      question,
+      20,
+      workspaceDocumentIds,
+    );
+    const results = Array.isArray(rawResults)
+      ? rawResults
+      : rawResults?.points || [];
+    console.log(
+      `[DEBUG] RagService.ask: Qdrant search returned ${results.length} results.`,
+    );
 
-        // Filter by workspace at the Qdrant query level instead of fetching
-        // 20 global matches and hoping enough of them belong to this workspace.
-        const rawResults = await this.retrival.retrive(question, 20, workspaceDocumentIds);
-        const results = Array.isArray(rawResults) ? rawResults : (rawResults?.points || []);
-        console.log(`[DEBUG] RagService.ask: Qdrant search returned ${results.length} results.`);
+    const filteredMatch = (results as any[]).filter((item: any) =>
+      workspaceDocumentIds.includes(item.payload.documentId),
+    );
+    console.log(
+      `[DEBUG] RagService.ask: After filtering, ${filteredMatch.length} results remain.`,
+    );
 
-        const filteredMatch = (results as any[]).filter(
-            (item: any) => workspaceDocumentIds.includes(item.payload.documentId),
-        );
-        console.log(`[DEBUG] RagService.ask: After filtering, ${filteredMatch.length} results remain.`);
+    if (filteredMatch.length === 0) {
+      // Check if there are documents in the workspace that are still PROCESSING
+      const processingDocuments = await this.Prisma.document.count({
+        where: { workspaceId, status: 'PROCESSING' },
+      });
 
-        if (filteredMatch.length === 0) {
-            // Check if there are documents in the workspace that are still PROCESSING
-            const processingDocuments = await this.Prisma.document.count({
-                where: { workspaceId, status: 'PROCESSING' }
-            });
-
-            if (processingDocuments > 0) {
-                 return {
-                    answer: 'The system is still processing your documents. Please try again in a few moments.',
-                    source: [],
-                };
-            }
-
-            await this.usageTracker.track(userId, workspaceId, 'RAG_QUERY', { question });
-            return {
-                answer: 'I could not find that information in the uploaded documents.',
-                source: [],
-            };
-        }
-
-        const context = filteredMatch.map((item: any) => item.payload.content).join('\n\n');
-        const prompt = this.promprbuilder.builderPrompt(question, context);
-
-        let response;
-        try {
-            response = await this.openai.chat.completions.create({
-                model: 'gpt-4o-mini',
-                messages: [
-                    {
-                        role: 'user',
-                        content: prompt,
-                    }
-                ]
-            });
-        } catch (error) {
-            console.error('RagService.ask: OpenAI completion failed', error);
-            throw error;
-        }
-
-        await this.Prisma.retrievalLog.create({
-            data: { workspaceId, query: question, retrievedChunks: filteredMatch as any }
-        });
-
-        await this.usageTracker.track(userId, workspaceId, 'RAG_QUERY', { question });
-
+      if (processingDocuments > 0) {
         return {
-            answer: response.choices[0].message.content || '',
-            source: filteredMatch.map((item: any) => ({ chunkId: item.payload.chunkId, documentId: item.payload.documentId })),
-        }
+          answer:
+            'The system is still processing your documents. Please try again in a few moments.',
+          source: [],
+        };
+      }
+
+      await this.usageTracker.track(userId, workspaceId, 'RAG_QUERY', {
+        question,
+      });
+      return {
+        answer: 'I could not find that information in the uploaded documents.',
+        source: [],
+      };
     }
+
+    const context = filteredMatch
+      .map((item: any) => item.payload.content)
+      .join('\n\n');
+    const prompt = this.promprbuilder.builderPrompt(question, context);
+
+    let response;
+    try {
+      response = await this.openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+      });
+    } catch (error) {
+      console.error('RagService.ask: OpenAI completion failed', error);
+      throw error;
+    }
+
+    await this.Prisma.retrievalLog.create({
+      data: {
+        workspaceId,
+        query: question,
+        retrievedChunks: filteredMatch as any,
+      },
+    });
+
+    await this.usageTracker.track(userId, workspaceId, 'RAG_QUERY', {
+      question,
+    });
+
+    return {
+      answer: response.choices[0].message.content || '',
+      source: filteredMatch.map((item: any) => ({
+        chunkId: item.payload.chunkId,
+        documentId: item.payload.documentId,
+      })),
+    };
+  }
 }

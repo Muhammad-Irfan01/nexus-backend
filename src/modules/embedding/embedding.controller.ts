@@ -1,16 +1,8 @@
-import {
-  Controller,
-  Post,
-  Param,
-  Get,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Post, Param, Get, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { EmbeddingQueueService } from './queues/embeddings.queue.service';
-
-
 
 @UseGuards(JwtAuthGuard)
 @Controller('embeddings')
@@ -30,29 +22,25 @@ export class EmbeddingsController {
     @Param('documentId') documentId: string,
   ) {
     // Validate document ownership via workspace
-    const document =
-      await this.prisma.document.findUnique({
-        where: { id: documentId },
-      });
+    const document = await this.prisma.document.findUnique({
+      where: { id: documentId },
+    });
 
     if (!document) {
       throw new Error('Document not found');
     }
 
-    const membership =
-      await this.prisma.workspaceMember.findUnique({
-        where: {
-          userId_workspaceId: {
-            userId,
-            workspaceId: document.workspaceId,
-          },
+    const membership = await this.prisma.workspaceMember.findUnique({
+      where: {
+        userId_workspaceId: {
+          userId,
+          workspaceId: document.workspaceId,
         },
-      });
+      },
+    });
 
     if (!membership) {
-      throw new Error(
-        'You are not a member of this workspace',
-      );
+      throw new Error('You are not a member of this workspace');
     }
 
     await this.embeddingsQueue.addJob(documentId);
@@ -71,32 +59,28 @@ export class EmbeddingsController {
     @CurrentUser('sub') userId: string,
     @Param('documentId') documentId: string,
   ) {
-    const document =
-      await this.prisma.document.findUnique({
-        where: { id: documentId },
-        include: {
-          chunks: true,
-        },
-      });
+    const document = await this.prisma.document.findUnique({
+      where: { id: documentId },
+      include: {
+        chunks: true,
+      },
+    });
 
     if (!document) {
       throw new Error('Document not found');
     }
 
-    const membership =
-      await this.prisma.workspaceMember.findUnique({
-        where: {
-          userId_workspaceId: {
-            userId,
-            workspaceId: document.workspaceId,
-          },
+    const membership = await this.prisma.workspaceMember.findUnique({
+      where: {
+        userId_workspaceId: {
+          userId,
+          workspaceId: document.workspaceId,
         },
-      });
+      },
+    });
 
     if (!membership) {
-      throw new Error(
-        'You are not a member of this workspace',
-      );
+      throw new Error('You are not a member of this workspace');
     }
 
     const total = document.chunks.length;
@@ -126,12 +110,7 @@ export class EmbeddingsController {
         processing,
         pending,
       },
-      progress:
-        total === 0
-          ? 0
-          : Math.round(
-              (completed / total) * 100,
-            ),
+      progress: total === 0 ? 0 : Math.round((completed / total) * 100),
     };
   }
 
@@ -143,29 +122,25 @@ export class EmbeddingsController {
     @CurrentUser('sub') userId: string,
     @Param('documentId') documentId: string,
   ) {
-    const document =
-      await this.prisma.document.findUnique({
-        where: { id: documentId },
-      });
+    const document = await this.prisma.document.findUnique({
+      where: { id: documentId },
+    });
 
     if (!document) {
       throw new Error('Document not found');
     }
 
-    const membership =
-      await this.prisma.workspaceMember.findUnique({
-        where: {
-          userId_workspaceId: {
-            userId,
-            workspaceId: document.workspaceId,
-          },
+    const membership = await this.prisma.workspaceMember.findUnique({
+      where: {
+        userId_workspaceId: {
+          userId,
+          workspaceId: document.workspaceId,
         },
-      });
+      },
+    });
 
     if (!membership) {
-      throw new Error(
-        'You are not a member of this workspace',
-      );
+      throw new Error('You are not a member of this workspace');
     }
 
     // Reset failed chunks

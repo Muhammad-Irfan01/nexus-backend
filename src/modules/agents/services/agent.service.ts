@@ -5,68 +5,72 @@ import { UpdateAgentDto } from '../dto/update-agent.dto';
 
 @Injectable()
 export class agentService {
-    constructor( private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
-    async createAgent(workspaceId: string, userId: string, dto: CreateAgentDto) {
-        const membership = await this.prisma.workspaceMember.findUnique({
-            where: {userId_workspaceId: {userId, workspaceId}}
-        })
+  async createAgent(workspaceId: string, userId: string, dto: CreateAgentDto) {
+    const membership = await this.prisma.workspaceMember.findUnique({
+      where: { userId_workspaceId: { userId, workspaceId } },
+    });
 
-        if(!membership) throw new ForbiddenException('You are not a member of this workspace');
+    if (!membership)
+      throw new ForbiddenException('You are not a member of this workspace');
 
-        return this.prisma.agent.create({
-            data: {
-                workspaceId,
-                name: dto.name,
-                type: dto.type,
-                description: dto.description,
-                systemPrompt: dto.systemPrompt
-            }
-        })
-    }
- 
-    async getAgents(userId: string, workspaceId: string) {
-        const membership = await this.prisma.workspaceMember.findUnique({
-            where: {userId_workspaceId: {userId, workspaceId}}
-        })
+    return this.prisma.agent.create({
+      data: {
+        workspaceId,
+        name: dto.name,
+        type: dto.type,
+        description: dto.description,
+        systemPrompt: dto.systemPrompt,
+      },
+    });
+  }
 
-        if(!membership) throw new ForbiddenException('You are not a member of this workspace');
+  async getAgents(userId: string, workspaceId: string) {
+    const membership = await this.prisma.workspaceMember.findUnique({
+      where: { userId_workspaceId: { userId, workspaceId } },
+    });
 
-        return this.prisma.agent.findMany({
-            where: {workspaceId},
-            orderBy: {createdAt: 'desc'}
-        })
-    }
+    if (!membership)
+      throw new ForbiddenException('You are not a member of this workspace');
 
-    async getAgent(userId: string, agentId: string) {
-        const agent = await this.prisma.agent.findUnique({
-            where: {id: agentId}
-        })
+    return this.prisma.agent.findMany({
+      where: { workspaceId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 
-        if(!agent) throw new ForbiddenException('Agent not found');
+  async getAgent(userId: string, agentId: string) {
+    const agent = await this.prisma.agent.findUnique({
+      where: { id: agentId },
+    });
 
-        const membership = await this.prisma.workspaceMember.findUnique({
-            where: {userId_workspaceId: {userId, workspaceId: agent.workspaceId}}
-        })
+    if (!agent) throw new ForbiddenException('Agent not found');
 
-        if(!membership) throw new ForbiddenException('You are not a member of this workspace');
+    const membership = await this.prisma.workspaceMember.findUnique({
+      where: { userId_workspaceId: { userId, workspaceId: agent.workspaceId } },
+    });
 
-        return agent;
-    }
+    if (!membership)
+      throw new ForbiddenException('You are not a member of this workspace');
 
-    async updateAgent(userId: string, agentId: string, dto: UpdateAgentDto) {
-        const agent = await this.getAgent(userId, agentId);
+    return agent;
+  }
 
-        return this.prisma.agent.update({
-            where: {id: agentId}, data: dto
-        })
-    }
+  async updateAgent(userId: string, agentId: string, dto: UpdateAgentDto) {
+    const agent = await this.getAgent(userId, agentId);
 
-    async deleteAgent(userId: string, agentId: string) {
-        const agent = await this.getAgent(userId, agentId);
+    return this.prisma.agent.update({
+      where: { id: agentId },
+      data: dto,
+    });
+  }
 
-        return this.prisma.agent.delete({
-            where: {id: agentId}
-        })
-    }
+  async deleteAgent(userId: string, agentId: string) {
+    const agent = await this.getAgent(userId, agentId);
+
+    return this.prisma.agent.delete({
+      where: { id: agentId },
+    });
+  }
 }

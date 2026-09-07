@@ -9,19 +9,16 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 @Controller('auth')
 export class AuthController {
-    constructor( private authService: AuthService) {
-    }
+  constructor(private authService: AuthService) {}
 
-     /*
+  /*
   =====================================
   REGISTER
   =====================================
   */
 
   @Post('register')
-  async register(
-    @Body() dto: RegisterDto,
-  ) {
+  async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
@@ -32,9 +29,7 @@ export class AuthController {
   */
 
   @Post('login')
-  async login(
-    @Body() dto: LoginDto,
-  ) {
+  async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
 
@@ -46,12 +41,8 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  async getCurrentUser(
-    @CurrentUser() user: any,
-  ) {
-    return this.authService.getProfile(
-      user.sub,
-    );
+  async getCurrentUser(@CurrentUser() user: any) {
+    return this.authService.getProfile(user.sub);
   }
 
   /*
@@ -62,13 +53,8 @@ export class AuthController {
 
   @Post('refresh')
   @UseGuards(JwtRefreshGuard)
-  async refreshToken(
-    @CurrentUser() user: any,
-  ) {
-    return this.authService.refreshToken(
-      user.sub,
-      user.refreshToken,
-    );
+  async refreshToken(@CurrentUser() user: any) {
+    return this.authService.refreshToken(user.sub, user.refreshToken);
   }
 
   /*
@@ -79,12 +65,8 @@ export class AuthController {
 
   @Post('logout')
   @UseGuards(JwtAuthGuard)
-  async logout(
-    @CurrentUser() user: any,
-  ) {
-    return this.authService.logout(
-      user.sub,
-    );
+  async logout(@CurrentUser() user: any) {
+    return this.authService.logout(user.sub);
   }
 
   /*
@@ -94,12 +76,8 @@ export class AuthController {
   */
 
   @Get('verify-email')
-  async verifyEmail(
-    @Query('token') token: string,
-  ) {
-    return this.authService.verifyEmail(
-      token,
-    );
+  async verifyEmail(@Query('token') token: string) {
+    return this.authService.verifyEmail(token);
   }
 
   /*
@@ -110,13 +88,8 @@ export class AuthController {
 
   @Post('resend-verification')
   @UseGuards(JwtAuthGuard)
-  async resendVerificationEmail(
-    @CurrentUser() user: any,
-  ) {
-    return this.authService
-      .resendVerificationEmail(
-        user.sub,
-      );
+  async resendVerificationEmail(@CurrentUser() user: any) {
+    return this.authService.resendVerificationEmail(user.sub);
   }
 
   /*
@@ -130,8 +103,7 @@ export class AuthController {
     @Body()
     dto: ForgotPasswordDto,
   ) {
-    return this.authService
-      .forgotPassword(dto.email);
+    return this.authService.forgotPassword(dto.email);
   }
 
   /*
@@ -145,9 +117,6 @@ export class AuthController {
     @Body()
     dto: ResetPasswordDto,
   ) {
-    return this.authService.resetPassword(
-      dto,
-    );
+    return this.authService.resetPassword(dto);
   }
 }
-

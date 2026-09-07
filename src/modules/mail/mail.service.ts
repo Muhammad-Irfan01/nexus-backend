@@ -1,71 +1,50 @@
-import {
- Injectable,
- InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 
-import { MailerService }
-from '@nestjs-modules/mailer';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class MailService {
- constructor(
-  private readonly mailerService:
-    MailerService,
- ) {}
+  constructor(private readonly mailerService: MailerService) {}
 
- async sendVerificationEmail(
-  email: string,
-  token: string,
- ) {
-  try {
-   const url =
-`${process.env.FRONTEND_URL}/verify-email?token=${token}`;
+  async sendVerificationEmail(email: string, token: string) {
+    try {
+      const url = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
 
-   await this.mailerService.sendMail({
-    to: email,
+      await this.mailerService.sendMail({
+        to: email,
 
-    subject:
-      'Verify Your Email',
+        subject: 'Verify Your Email',
 
-    template:
-      'verification',
+        template: 'verification',
 
-    context: {
-     verificationUrl: url,
-    },
-   });
-  } catch (error) {
-   throw new InternalServerErrorException(
-    'Failed to send verification email',
-   );
+        context: {
+          verificationUrl: url,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to send verification email',
+      );
+    }
   }
- }
 
- async sendResetPasswordEmail(
-  email: string,
-  token: string,
- ) {
-  try {
-   const url =
-`${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+  async sendResetPasswordEmail(email: string, token: string) {
+    try {
+      const url = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
 
-   await this.mailerService.sendMail({
-    to: email,
+      await this.mailerService.sendMail({
+        to: email,
 
-    subject:
-      'Reset Your Password',
+        subject: 'Reset Your Password',
 
-    template:
-      'reset-password',
+        template: 'reset-password',
 
-    context: {
-     resetUrl: url,
-    },
-   });
-  } catch (error) {
-   throw new InternalServerErrorException(
-    'Failed to send reset email',
-   );
+        context: {
+          resetUrl: url,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to send reset email');
+    }
   }
- }
 }

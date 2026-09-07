@@ -13,7 +13,12 @@ import { AgentsModule } from '../agents/agents.module';
 @Module({
   imports: [EmbeddingModule, PrismaModule, AnalyticsModule],
   controllers: [RagController],
-  providers: [RagService, RetrivalService, PromptBuilderService, EmbeddingService],
-  exports: [RagService, RetrivalService]
+  providers: [
+    RagService,
+    RetrivalService,
+    PromptBuilderService,
+    EmbeddingService,
+  ],
+  exports: [RagService, RetrivalService],
 })
 export class RagModule {}

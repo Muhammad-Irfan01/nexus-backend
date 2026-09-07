@@ -4,8 +4,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 
-import { StripeService }
-  from './stripe.service';
+import { StripeService } from './stripe.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 @Injectable()
@@ -20,113 +19,98 @@ export class BillingService {
     workspaceId: string,
     priceId: string,
   ) {
-    const membership =
-      await this.prisma.workspaceMember.findUnique({
-        where: {
-          userId_workspaceId: {
-            userId,
-            workspaceId,
-          },
+    const membership = await this.prisma.workspaceMember.findUnique({
+      where: {
+        userId_workspaceId: {
+          userId,
+          workspaceId,
         },
-      });
+      },
+    });
 
     if (!membership) {
       throw new ForbiddenException();
     }
 
-    let subscription =
-      await this.prisma.subscription.findUnique({
-        where: {
-          workspaceId,
-        },
-      });
+    let subscription = await this.prisma.subscription.findUnique({
+      where: {
+        workspaceId,
+      },
+    });
 
     let customerId: string;
 
     if (!subscription) {
-      const customer =
-        await this.stripeService.client.customers.create({
-          metadata: {
-            workspaceId,
-          },
-        });
+      const customer = await this.stripeService.client.customers.create({
+        metadata: {
+          workspaceId,
+        },
+      });
 
-      subscription =
-        await this.prisma.subscription.create({
-          data: {
-            workspaceId,
-            stripeCustomerId: customer.id,
-            status: 'INCOMPLETE',
-          },
-        });
+      subscription = await this.prisma.subscription.create({
+        data: {
+          workspaceId,
+          stripeCustomerId: customer.id,
+          status: 'INCOMPLETE',
+        },
+      });
 
       customerId = customer.id;
     } else {
-      customerId =
-        subscription.stripeCustomerId;
+      customerId = subscription.stripeCustomerId;
     }
 
-    const session =
-      await this.stripeService.client.checkout.sessions.create({
-        mode: 'subscription',
+    const session = await this.stripeService.client.checkout.sessions.create({
+      mode: 'subscription',
 
-        customer: customerId,
+      customer: customerId,
 
-        line_items: [
-          {
-            price: priceId,
-            quantity: 1,
-          },
-        ],
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
 
-        success_url:
-          process.env.STRIPE_SUCCESS_URL!,
+      success_url: process.env.STRIPE_SUCCESS_URL!,
 
-        cancel_url:
-          process.env.STRIPE_CANCEL_URL!,
-      });
+      cancel_url: process.env.STRIPE_CANCEL_URL!,
+    });
 
     return {
       url: session.url,
     };
   }
 
-  async createPortalSession(
-    workspaceId: string,
-  ) {
-    const subscription =
-      await this.prisma.subscription.findUnique({
-        where: {
-          workspaceId,
-        },
-      });
+  async createPortalSession(workspaceId: string) {
+    const subscription = await this.prisma.subscription.findUnique({
+      where: {
+        workspaceId,
+      },
+    });
 
     if (!subscription) {
-        throw new InternalServerErrorException('Subscription not found');
+      throw new InternalServerErrorException('Subscription not found');
     }
 
     try {
-        const session =
+      const session =
         await this.stripeService.client.billingPortal.sessions.create({
-            customer:
-            subscription.stripeCustomerId,
+          customer: subscription.stripeCustomerId,
 
-            return_url:
-            process.env.STRIPE_SUCCESS_URL!,
+          return_url: process.env.STRIPE_SUCCESS_URL!,
         });
 
-        return {
-            url: session.url
-        };
+      return {
+        url: session.url,
+      };
     } catch (error) {
-        console.error('Stripe Portal Error:', error);
-        throw new InternalServerErrorException('Failed to create portal session');
+      console.error('Stripe Portal Error:', error);
+      throw new InternalServerErrorException('Failed to create portal session');
     }
   }
 
-  async getSubscription(
-    workspaceId: string,
-  ) {
+  async getSubscription(workspaceId: string) {
     return this.prisma.subscription.findUnique({
       where: {
         workspaceId,

@@ -25,13 +25,19 @@ export class CryptoService {
     return this.prisma.accessProtocol.findMany({ where: { workspaceId } });
   }
 
-  async createAccessProtocol(workspaceId: string, name: string, configuration: any) {
+  async createAccessProtocol(
+    workspaceId: string,
+    name: string,
+    configuration: any,
+  ) {
     return this.prisma.accessProtocol.create({
       data: { name, configuration, workspaceId },
     });
   }
 
   async deleteAccessProtocol(id: string, workspaceId: string) {
-    return this.prisma.accessProtocol.deleteMany({ where: { id, workspaceId } });
+    return this.prisma.accessProtocol.deleteMany({
+      where: { id, workspaceId },
+    });
   }
 }

@@ -1,17 +1,19 @@
-import { Injectable } from "@nestjs/common";
-import { EmbeddingService } from "../../embedding/service/embedding.service";
-import { QdrantService } from "../../embedding/service/qdrant.service";
-
+import { Injectable } from '@nestjs/common';
+import { EmbeddingService } from '../../embedding/service/embedding.service';
+import { QdrantService } from '../../embedding/service/qdrant.service';
 
 @Injectable()
 export class RetrivalService {
-    constructor( private embedding: EmbeddingService, private qdrant: QdrantService) {}
+  constructor(
+    private embedding: EmbeddingService,
+    private qdrant: QdrantService,
+  ) {}
 
-    async retrive(question: string, limit = 5, documentIds?: string[]) {
-        const vector = await this.embedding.generateEnbedding(question);
+  async retrive(question: string, limit = 5, documentIds?: string[]) {
+    const vector = await this.embedding.generateEnbedding(question);
 
-        const res = await this.qdrant.search(vector, limit, documentIds);
+    const res = await this.qdrant.search(vector, limit, documentIds);
 
-        return res;
-    }
+    return res;
+  }
 }

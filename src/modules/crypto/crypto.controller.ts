@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
 import { CryptoService } from './services/crypto.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -13,12 +21,18 @@ export class CryptoController {
   }
 
   @Post(':workspaceId/keys')
-  async createApiKey(@Param('workspaceId') workspaceId: string, @Body('name') name: string) {
+  async createApiKey(
+    @Param('workspaceId') workspaceId: string,
+    @Body('name') name: string,
+  ) {
     return this.cryptoService.createApiKey(workspaceId, name);
   }
 
   @Delete(':workspaceId/keys/:id')
-  async deleteApiKey(@Param('id') id: string, @Param('workspaceId') workspaceId: string) {
+  async deleteApiKey(
+    @Param('id') id: string,
+    @Param('workspaceId') workspaceId: string,
+  ) {
     return this.cryptoService.deleteApiKey(id, workspaceId);
   }
 
@@ -28,12 +42,22 @@ export class CryptoController {
   }
 
   @Post(':workspaceId/protocols')
-  async createAccessProtocol(@Param('workspaceId') workspaceId: string, @Body() body: { name: string, configuration: any }) {
-    return this.cryptoService.createAccessProtocol(workspaceId, body.name, body.configuration);
+  async createAccessProtocol(
+    @Param('workspaceId') workspaceId: string,
+    @Body() body: { name: string; configuration: any },
+  ) {
+    return this.cryptoService.createAccessProtocol(
+      workspaceId,
+      body.name,
+      body.configuration,
+    );
   }
 
   @Delete(':workspaceId/protocols/:id')
-  async deleteAccessProtocol(@Param('id') id: string, @Param('workspaceId') workspaceId: string) {
+  async deleteAccessProtocol(
+    @Param('id') id: string,
+    @Param('workspaceId') workspaceId: string,
+  ) {
     return this.cryptoService.deleteAccessProtocol(id, workspaceId);
   }
 }

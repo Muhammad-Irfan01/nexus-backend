@@ -1,7 +1,6 @@
-import { IsUUID } from "class-validator";
-
+import { IsUUID } from 'class-validator';
 
 export class uploadDocumentDto {
-     @IsUUID()
-     workspaceId: string
+  @IsUUID()
+  workspaceId: string;
 }

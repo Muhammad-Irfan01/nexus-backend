@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Receiver } from '@upstash/qstash';
 
 @Injectable()
@@ -15,7 +20,7 @@ export class QStashSignatureGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const signature = request.headers['upstash-signature'];
-    
+
     if (!signature) {
       throw new UnauthorizedException('Missing QStash signature');
     }

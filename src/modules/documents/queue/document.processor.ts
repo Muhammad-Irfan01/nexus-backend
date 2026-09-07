@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { TextExtractionService }
-  from '../services/text-extraction.service';
+import { TextExtractionService } from '../services/text-extraction.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ChunkingService } from '../services/chunking.service';
 import { EmbeddingQueueService } from '../../embedding/queues/embeddings.queue.service';
-
 
 @Injectable()
 export class DocumentProcessor {
@@ -12,25 +10,28 @@ export class DocumentProcessor {
     private prisma: PrismaService,
     private extractor: TextExtractionService,
     private chunkingservice: ChunkingService,
-    private embeddingQueueService: EmbeddingQueueService
+    private embeddingQueueService: EmbeddingQueueService,
   ) {}
 
-  async process(
-    documentId: string,
-  ) {
-    console.log(`[DEBUG] DocumentProcessor.process: starting documentId=${documentId}`);
-    const document =
-      await this.prisma.document.findUnique({
-        where: { id: documentId },
-      });
+  async process(documentId: string) {
+    console.log(
+      `[DEBUG] DocumentProcessor.process: starting documentId=${documentId}`,
+    );
+    const document = await this.prisma.document.findUnique({
+      where: { id: documentId },
+    });
 
     if (!document) {
-      console.log(`[DEBUG] DocumentProcessor.process: document not found documentId=${documentId}`);
+      console.log(
+        `[DEBUG] DocumentProcessor.process: document not found documentId=${documentId}`,
+      );
       return;
     }
 
     try {
-      console.log(`[DEBUG] DocumentProcessor.process: updating status to PROCESSING`);
+      console.log(
+        `[DEBUG] DocumentProcessor.process: updating status to PROCESSING`,
+      );
       await this.prisma.document.update({
         where: { id: document.id },
         data: {
@@ -38,15 +39,16 @@ export class DocumentProcessor {
         },
       });
 
-      const text =
-        await this.extractor.extractText(
-          document.storagePath,
-          document.mimeType,
-        );
+      const text = await this.extractor.extractText(
+        document.storagePath,
+        document.mimeType,
+      );
       console.log(`[DEBUG] DocumentProcessor.process: text extracted`);
 
       const chunks = this.chunkingservice.splitText(text);
-      console.log(`[DEBUG] DocumentProcessor.process: text split into ${chunks.length} chunks`);
+      console.log(
+        `[DEBUG] DocumentProcessor.process: text split into ${chunks.length} chunks`,
+      );
 
       await this.prisma.documentChunk.deleteMany({
         where: {
@@ -55,20 +57,15 @@ export class DocumentProcessor {
       });
 
       await this.prisma.documentChunk.createMany({
-        data: chunks.map(
-          (chunk, index) => ({
-            documentId: document.id,
+        data: chunks.map((chunk, index) => ({
+          documentId: document.id,
 
-            chunkIndex: index,
+          chunkIndex: index,
 
-            content: chunk,
+          content: chunk,
 
-            tokenCount:
-              this.chunkingservice.estimateTokens(
-                chunk,
-              ),
-          })
-        ),
+          tokenCount: this.chunkingservice.estimateTokens(chunk),
+        })),
       });
 
       // Enqueue embedding job only AFTER chunks are persisted,
@@ -76,7 +73,6 @@ export class DocumentProcessor {
       // and silently process zero chunks (no error is thrown either way).
       await this.embeddingQueueService.addJob(document.id);
       console.log(`[DEBUG] DocumentProcessor.process: embedding job added`);
-
 
       await this.prisma.document.update({
         where: { id: document.id },
@@ -86,9 +82,14 @@ export class DocumentProcessor {
           processedAt: new Date(),
         },
       });
-      console.log(`[DEBUG] DocumentProcessor.process: finished documentId=${documentId}`);
+      console.log(
+        `[DEBUG] DocumentProcessor.process: finished documentId=${documentId}`,
+      );
     } catch (error) {
-      console.error(`[DEBUG] DocumentProcessor.process: error documentId=${documentId}`, error);
+      console.error(
+        `[DEBUG] DocumentProcessor.process: error documentId=${documentId}`,
+        error,
+      );
       await this.prisma.document.update({
         where: { id: document.id },
         data: {
@@ -99,5 +100,4 @@ export class DocumentProcessor {
       throw error;
     }
   }
-
 }

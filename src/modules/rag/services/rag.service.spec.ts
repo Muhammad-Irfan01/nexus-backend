@@ -12,9 +12,15 @@ describe('RagService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RagService,
-        { provide: PrismaService, useValue: { document: { findMany: jest.fn().mockResolvedValue([]) } } },
+        {
+          provide: PrismaService,
+          useValue: { document: { findMany: jest.fn().mockResolvedValue([]) } },
+        },
         { provide: RetrivalService, useValue: { retrive: jest.fn() } },
-        { provide: PromptBuilderService, useValue: { builderPrompt: jest.fn() } },
+        {
+          provide: PromptBuilderService,
+          useValue: { builderPrompt: jest.fn() },
+        },
         { provide: UsageTrackerService, useValue: { track: jest.fn() } },
       ],
     }).compile();

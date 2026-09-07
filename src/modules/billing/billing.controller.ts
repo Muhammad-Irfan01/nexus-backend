@@ -7,13 +7,19 @@ import { CreateCheckoutDto } from './dto/create-checkout.dto';
 @Controller('billing')
 @UseGuards(JwtAuthGuard)
 export class BillingController {
-  constructor(private readonly billingService: BillingService) {
-
-  }
+  constructor(private readonly billingService: BillingService) {}
 
   @Post(':workspaceId/checkout')
-  checkout( @CurrentUser('sub') userId: string, @Param('workspaceId') workspaceId: string, @Body() dto: { priceId: string }) {
-    return this.billingService.createCheckoutSession(userId, workspaceId, dto.priceId);
+  checkout(
+    @CurrentUser('sub') userId: string,
+    @Param('workspaceId') workspaceId: string,
+    @Body() dto: { priceId: string },
+  ) {
+    return this.billingService.createCheckoutSession(
+      userId,
+      workspaceId,
+      dto.priceId,
+    );
   }
 
   @Post(':workspaceId/portal')

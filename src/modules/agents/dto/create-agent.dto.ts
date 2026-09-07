@@ -1,17 +1,17 @@
-import { IsEnum, IsOptional, IsString } from "class-validator";
-import { AgentType } from "@prisma/client"
+import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { AgentType } from '@prisma/client';
 
 export class CreateAgentDto {
-    @IsString()
-    name: string;
+  @IsString()
+  name: string;
 
-    @IsString()
-    @IsOptional()
-    description?: string;
+  @IsString()
+  @IsOptional()
+  description?: string;
 
-    @IsEnum(AgentType)
-    type: AgentType;
+  @IsEnum(AgentType)
+  type: AgentType;
 
-    @IsString()
-    systemPrompt: string;
+  @IsString()
+  systemPrompt: string;
 }

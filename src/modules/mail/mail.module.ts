@@ -1,58 +1,47 @@
 import { Module } from '@nestjs/common';
 
-import { MailerModule }
-from '@nestjs-modules/mailer';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 import { join } from 'path';
 
-import { MailService }
-from './mail.service';
+import { MailService } from './mail.service';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/adapters/handlebars.adapter';
 
 @Module({
- imports: [
-  MailerModule.forRoot({
-   transport: {
-    host: process.env.MAIL_HOST,
+  imports: [
+    MailerModule.forRoot({
+      transport: {
+        host: process.env.MAIL_HOST,
 
-    port: Number(
-      process.env.MAIL_PORT,
-    ),
+        port: Number(process.env.MAIL_PORT),
 
-    secure: false,
+        secure: false,
 
-    auth: {
-     user:
-      process.env.MAIL_USER,
+        auth: {
+          user: process.env.MAIL_USER,
 
-     pass:
-      process.env.MAIL_PASSWORD,
-    },
-   },
+          pass: process.env.MAIL_PASSWORD,
+        },
+      },
 
-   defaults: {
-    from:
-      process.env.MAIL_FROM,
-   },
+      defaults: {
+        from: process.env.MAIL_FROM,
+      },
 
-   template: {
-    dir: join(
-      process.cwd(),
-      'src/modules/mail/templates',
-    ),
+      template: {
+        dir: join(process.cwd(), 'src/modules/mail/templates'),
 
-    adapter:
-      new HandlebarsAdapter(),
+        adapter: new HandlebarsAdapter(),
 
-    options: {
-     strict: true,
-    },
-   },
-  }),
- ],
+        options: {
+          strict: true,
+        },
+      },
+    }),
+  ],
 
- providers: [MailService],
+  providers: [MailService],
 
- exports: [MailService],
+  exports: [MailService],
 })
 export class MailModule {}

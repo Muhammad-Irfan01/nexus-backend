@@ -13,7 +13,11 @@ export class SupabaseStorageService {
     );
   }
 
-  async upload(fileName: string, buffer: Buffer, mimeType: string): Promise<string> {
+  async upload(
+    fileName: string,
+    buffer: Buffer,
+    mimeType: string,
+  ): Promise<string> {
     const { error } = await this.client.storage
       .from(this.bucket)
       .upload(fileName, buffer, { contentType: mimeType });

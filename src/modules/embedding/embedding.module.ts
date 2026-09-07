@@ -9,7 +9,12 @@ import { EmbeddingsWebhookController } from './webhooks/embeddings-webhook.contr
 
 @Module({
   imports: [QStashModule],
-  providers: [EmbeddingService, QdrantService, EmbeddingQueueService, EmbeddingsProcessor],
+  providers: [
+    EmbeddingService,
+    QdrantService,
+    EmbeddingQueueService,
+    EmbeddingsProcessor,
+  ],
   controllers: [EmbeddingsController, EmbeddingsWebhookController],
   exports: [EmbeddingQueueService, QdrantService],
 })

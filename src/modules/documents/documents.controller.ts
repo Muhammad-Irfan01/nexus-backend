@@ -1,4 +1,13 @@
-import { Controller, Delete, Get, Param, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
@@ -8,37 +17,35 @@ import { DocumentsService } from './services/documents.service';
 @Controller('documents')
 @UseGuards(JwtAuthGuard)
 export class DocumentsController {
-    constructor(private readonly documentservice: DocumentsService) { }
+  constructor(private readonly documentservice: DocumentsService) {}
 
-    @Post('workspace/:workspaceId/upload')
-    @UseInterceptors(FileInterceptor('file', {
-        storage: memoryStorage(),
-        fileFilter: (req, file, callback) => {
-            const allowedMimeTypes = [
-                'application/pdf',
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                'text/plain',
-            ];
+  @Post('workspace/:workspaceId/upload')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      fileFilter: (req, file, callback) => {
+        const allowedMimeTypes = [
+          'application/pdf',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'text/plain',
+        ];
 
-            if (
-                !allowedMimeTypes.includes(file.mimetype)
-            ) {
-                return callback(
-                    new Error(
-                        'Only PDF, DOCX and TXT files are allowed',
-                    ),
-                    false,
-                );
-            }
+        if (!allowedMimeTypes.includes(file.mimetype)) {
+          return callback(
+            new Error('Only PDF, DOCX and TXT files are allowed'),
+            false,
+          );
+        }
 
-            callback(null, true);
-        },
+        callback(null, true);
+      },
 
-        limits: {
-            fileSize: 20 * 1024 * 1024, // 20 MB
-        },
-    }))
-     async uploadDocument(
+      limits: {
+        fileSize: 20 * 1024 * 1024, // 20 MB
+      },
+    }),
+  )
+  async uploadDocument(
     @CurrentUser() user: any,
 
     @Param('workspaceId')
@@ -47,30 +54,38 @@ export class DocumentsController {
     @UploadedFile()
     file: Express.Multer.File,
   ) {
-    return this.documentservice.uploadDocument(
-      user.sub,
-      workspaceId,
-      file,
-    );
+    return this.documentservice.uploadDocument(user.sub, workspaceId, file);
   }
 
   @Get('workspace/:workspaceId')
-  async getWorkspaceDocument (@CurrentUser() user: any, @Param('workspaceId') workspaceId: string) {
+  async getWorkspaceDocument(
+    @CurrentUser() user: any,
+    @Param('workspaceId') workspaceId: string,
+  ) {
     return this.documentservice.getWorkspaceDocument(user.sub, workspaceId);
   }
 
   @Get(':documentId')
-  async getDocumentId( @CurrentUser() user: any, @Param('documentId') documentId: string) {
+  async getDocumentId(
+    @CurrentUser() user: any,
+    @Param('documentId') documentId: string,
+  ) {
     return this.documentservice.getDocumentById(user.sub, documentId);
   }
 
   @Delete(':documentId')
-  async deleteDocument( @CurrentUser() user: any, @Param('documentId') documentId: string) {
+  async deleteDocument(
+    @CurrentUser() user: any,
+    @Param('documentId') documentId: string,
+  ) {
     return this.documentservice.deleteDocument(user.sub, documentId);
   }
 
   @Post(':documentId/retry')
-  async retryProcessing( @CurrentUser() user: any, @Param('documentId') documentId: string) {
+  async retryProcessing(
+    @CurrentUser() user: any,
+    @Param('documentId') documentId: string,
+  ) {
     return this.documentservice.retryProcessing(user.sub, documentId);
   }
 
@@ -86,7 +101,10 @@ export class DocumentsController {
   // }
 
   @Get(':documentId/stats')
-  async getDocumentStats( @CurrentUser() user: any, @Param('documentId') documentId: string) {
+  async getDocumentStats(
+    @CurrentUser() user: any,
+    @Param('documentId') documentId: string,
+  ) {
     return this.documentservice.getDocumentStats(user.sub, documentId);
   }
 }

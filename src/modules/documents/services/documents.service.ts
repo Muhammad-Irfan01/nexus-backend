@@ -9,121 +9,163 @@ import { SupabaseStorageService } from './supabase-storage.service';
 
 @Injectable()
 export class DocumentsService {
-    constructor( 
-        private readonly prisma: PrismaService, 
-        private documentQueueService: DocumentQueueService, 
-        private readonly usageTracker: UsageTrackerService,
-        private readonly supabaseStorage: SupabaseStorageService
-    ) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private documentQueueService: DocumentQueueService,
+    private readonly usageTracker: UsageTrackerService,
+    private readonly supabaseStorage: SupabaseStorageService,
+  ) {}
 
+  async uploadDocument(
+    userId: string,
+    workspaceId: string,
+    file: Express.Multer.File,
+  ) {
+    const membership = await this.prisma.workspaceMember.findUnique({
+      where: { userId_workspaceId: { userId, workspaceId } },
+    });
 
-    async uploadDocument(userId: string, workspaceId: string, file: Express.Multer.File) {
-        const membership = await this.prisma.workspaceMember.findUnique({
-            where: {userId_workspaceId : {userId, workspaceId}}
-        })
+    if (!membership)
+      throw new ForbiddenException('You are not a member of this workspace');
 
-        if(!membership) throw new ForbiddenException('You are not a member of this workspace');
+    const fileName = `${Date.now()}-${file.originalname}`;
+    const storagePath = await this.supabaseStorage.upload(
+      fileName,
+      file.buffer,
+      file.mimetype,
+    );
 
-        const fileName = `${Date.now()}-${file.originalname}`;
-        const storagePath = await this.supabaseStorage.upload(fileName, file.buffer, file.mimetype);
+    const document = await this.prisma.document.create({
+      data: {
+        workspaceId,
+        uploadedById: userId,
+        name: fileName,
+        originalName: file.originalname,
+        size: file.size,
+        mimeType: file.mimetype,
+        storagePath: storagePath,
+        status: DocumentStatus.PROCESSING,
+      },
+    });
 
-        const document = await this.prisma.document.create({
-            data: {
-                workspaceId,
-                uploadedById: userId,
-                name: fileName,
-                originalName: file.originalname,
-                size: file.size,
-                mimeType: file.mimetype,
-                storagePath: storagePath,
-                status: DocumentStatus.PROCESSING,
-            }
-        })
+    await this.documentQueueService.addExtractionJob(document.id);
 
-        await this.documentQueueService.addExtractionJob(document.id);
-        
-        await this.usageTracker.track(userId, workspaceId, 'DOCUMENT_UPLOADED', {documentId: document.id});
+    await this.usageTracker.track(userId, workspaceId, 'DOCUMENT_UPLOADED', {
+      documentId: document.id,
+    });
 
-        return document
+    return document;
+  }
+
+  async getWorkspaceDocument(userId: string, workspaceId: string) {
+    const membership = await this.prisma.workspaceMember.findUnique({
+      where: { userId_workspaceId: { userId, workspaceId } },
+    });
+    console.log(membership);
+    if (!membership)
+      throw new ForbiddenException('You are not a member of this workspace');
+
+    return this.prisma.document.findMany({
+      where: { workspaceId },
+      include: {
+        uploadedBy: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+  }
+
+  async getDocumentById(userId: string, documentId: string) {
+    const document = await this.prisma.document.findUnique({
+      where: { id: documentId },
+      include: {
+        uploadedBy: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+          },
+        },
+        chunks: { orderBy: { createdAt: 'asc' } },
+      },
+    });
+
+    if (!document) throw new ForbiddenException('Document not found');
+
+    const membership = await this.prisma.workspaceMember.findUnique({
+      where: {
+        userId_workspaceId: { userId, workspaceId: document.workspaceId },
+      },
+    });
+
+    if (!membership)
+      throw new ForbiddenException('You are not a member of this workspace');
+
+    return document;
+  }
+
+  async deleteDocument(userId: string, documentId: string) {
+    const document = await this.prisma.document.findUnique({
+      where: { id: documentId },
+    });
+
+    if (!document) throw new ForbiddenException('Document not found');
+
+    const membership = await this.prisma.workspaceMember.findUnique({
+      where: {
+        userId_workspaceId: { userId, workspaceId: document.workspaceId },
+      },
+    });
+
+    if (!membership)
+      throw new ForbiddenException('You are not a member of this workspace');
+
+    try {
+      await this.supabaseStorage.delete(document.storagePath);
+    } catch (error: any) {
+      console.log('File already deleted from storage', error.message);
     }
 
-    async getWorkspaceDocument( userId: string, workspaceId: string) {
-        const membership = await this.prisma.workspaceMember.findUnique({
-            where: {userId_workspaceId: {userId, workspaceId}}
-        })
-        console.log(membership)
-        if(!membership) throw new ForbiddenException('You are not a member of this workspace');
+    await this.prisma.document.delete({
+      where: { id: documentId },
+    });
 
-        return this.prisma.document.findMany({
-            where: {workspaceId}, include: {uploadedBy : {select: {id: true, email: true, firstName: true, lastName: true, avatar: true}} }
-        })
-    }
+    return { message: 'Document deleted successfully' };
+  }
 
-    async getDocumentById(userId: string, documentId: string) {
-        const document = await this.prisma.document.findUnique({
-            where: {id: documentId}, include: {uploadedBy : {select: {id: true, email: true, firstName: true, lastName: true, avatar: true}},
-            chunks: {orderBy: {createdAt: 'asc'}} }
-        })
+  async retryProcessing(userId: string, documentId: string) {
+    const document = await this.prisma.document.findUnique({
+      where: { id: documentId },
+    });
 
-        if(!document) throw new ForbiddenException('Document not found');
+    if (!document) throw new ForbiddenException('Document not found');
 
-        const membership = await this.prisma.workspaceMember.findUnique({
-            where: {userId_workspaceId: {userId, workspaceId: document.workspaceId}}
-        })
+    const membership = await this.prisma.workspaceMember.findUnique({
+      where: {
+        userId_workspaceId: { userId, workspaceId: document.workspaceId },
+      },
+    });
 
-        if(!membership) throw new ForbiddenException('You are not a member of this workspace');
+    if (!membership)
+      throw new ForbiddenException('You are not a member of this workspace');
 
-        return document;
-    }
+    await this.prisma.document.update({
+      where: { id: documentId },
+      data: { status: DocumentStatus.PROCESSING },
+    });
 
-    async deleteDocument(userId: string, documentId: string) {
-        const document = await this.prisma.document.findUnique({
-            where: {id: documentId}
-        })
+    await this.documentQueueService.addExtractionJob(document.id);
 
-        if(!document) throw new ForbiddenException('Document not found');
-
-        const membership = await this.prisma.workspaceMember.findUnique({
-            where: {userId_workspaceId: {userId, workspaceId: document.workspaceId}}
-        })
-
-        if(!membership) throw new ForbiddenException('You are not a member of this workspace');
-
-        try {
-            await this.supabaseStorage.delete(document.storagePath);
-        } catch (error: any) {
-            console.log('File already deleted from storage', error.message)
-        }
-
-        await this.prisma.document.delete({
-            where: {id: documentId}
-        })
-
-        return {message: 'Document deleted successfully'}
-    }
-
-    async retryProcessing(userId: string, documentId: string) {
-        const document = await this.prisma.document.findUnique({
-            where: {id: documentId}
-        })
-
-        if(!document) throw new ForbiddenException('Document not found');
-
-        const membership = await this.prisma.workspaceMember.findUnique({
-            where: {userId_workspaceId: {userId, workspaceId: document.workspaceId}}
-        })
-
-        if(!membership) throw new ForbiddenException('You are not a member of this workspace');
-
-        await this.prisma.document.update({
-            where: {id: documentId}, data: {status: DocumentStatus.PROCESSING}
-        })
-
-        await this.documentQueueService.addExtractionJob(document.id);
-
-        return {message: 'Document reprocessing started'}
-    }
-
+    return { message: 'Document reprocessing started' };
+  }
 
   async getDocumentChunks(userId: string, documentId: string) {
     const document = await this.getDocumentById(userId, documentId);
@@ -134,7 +176,7 @@ export class DocumentsService {
     });
   }
 
-  async getDocumentStats (userId: string, documentId: string) {
+  async getDocumentStats(userId: string, documentId: string) {
     const document = await this.getDocumentById(userId, documentId);
 
     const chunkCount = await this.prisma.documentChunk.count({
@@ -147,25 +189,24 @@ export class DocumentsService {
     });
 
     return {
-        documentId: document.id,
+      documentId: document.id,
       chunkCount,
       tokenSum: tokenSum._sum.tokenCount,
       status: document.status,
-      processedAt: document.processedAt
-      
+      processedAt: document.processedAt,
     };
   }
 
-  async getAllChunks() { 
-  const document = await this.prisma.documentChunk.findMany({
+  async getAllChunks() {
+    const document = await this.prisma.documentChunk.findMany({
       select: {
-          id: true,
-          documentId: true,
-          chunkIndex: true,
-          content: true,
-        },
+        id: true,
+        documentId: true,
+        chunkIndex: true,
+        content: true,
+      },
     });
-    console.log(document)
-  return document
-}
+    console.log(document);
+    return document;
+  }
 }

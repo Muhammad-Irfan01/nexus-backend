@@ -22,11 +22,29 @@ import { BillingModule } from './modules/billing/billing.module';
 import { AgentsModule } from './modules/agents/agents.module';
 import { CryptoModule } from './modules/crypto/crypto.module';
 
-
 @Module({
-  imports: [ ConfigModule.forRoot({ isGlobal: true}), PrismaModule, UsersModule, AuthModule, AgentsModule, CryptoModule, WorkspaceModule, MailModule, DocumentsModule, EmbeddingModule, RagModule, ChatModule, AnalyticsModule, BillingModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    PrismaModule,
+    UsersModule,
+    AuthModule,
+    AgentsModule,
+    CryptoModule,
+    WorkspaceModule,
+    MailModule,
+    DocumentsModule,
+    EmbeddingModule,
+    RagModule,
+    ChatModule,
+    AnalyticsModule,
+    BillingModule,
+  ],
   exports: [],
   controllers: [AppController, WorkspaceController],
-  providers: [{provide : APP_GUARD, useClass: RolesGuard}, AppService, WorkspaceService],
+  providers: [
+    { provide: APP_GUARD, useClass: RolesGuard },
+    AppService,
+    WorkspaceService,
+  ],
 })
 export class AppModule {}

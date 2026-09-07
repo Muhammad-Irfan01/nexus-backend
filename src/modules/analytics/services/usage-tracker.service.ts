@@ -1,19 +1,23 @@
-import { Injectable } from "@nestjs/common";
-import { PrismaService } from "../../../prisma/prisma.service";
-
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../../../prisma/prisma.service';
 
 @Injectable()
 export class UsageTrackerService {
-    constructor (private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-    async track( userId: string, workspaceId: string, eventType: any, metadata: any) {
-        await this.prisma.usageEvent.create({
-            data: {
-                userId,
-                workspaceId,
-                eventType,
-                metadata
-            }
-        })
-    }
+  async track(
+    userId: string,
+    workspaceId: string,
+    eventType: any,
+    metadata: any,
+  ) {
+    await this.prisma.usageEvent.create({
+      data: {
+        userId,
+        workspaceId,
+        eventType,
+        metadata,
+      },
+    });
+  }
 }

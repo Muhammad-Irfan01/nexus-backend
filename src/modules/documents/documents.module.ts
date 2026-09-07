@@ -13,7 +13,14 @@ import { DocumentWebhookController } from './webhooks/document-webhook.controlle
 
 @Module({
   imports: [AnalyticsModule, EmbeddingModule, QStashModule],
-  providers: [DocumentsService, DocumentQueueService, TextExtractionService, ChunkingService, DocumentProcessor, SupabaseStorageService],
-  controllers: [DocumentsController, DocumentWebhookController]
+  providers: [
+    DocumentsService,
+    DocumentQueueService,
+    TextExtractionService,
+    ChunkingService,
+    DocumentProcessor,
+    SupabaseStorageService,
+  ],
+  controllers: [DocumentsController, DocumentWebhookController],
 })
 export class DocumentsModule {}

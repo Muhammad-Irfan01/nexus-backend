@@ -10,4 +10,4 @@ import { StripeService } from './services/stripe.service';
   providers: [BillingService, StripeService],
   exports: [BillingService],
 })
-export class BillingModule {} 
+export class BillingModule {}

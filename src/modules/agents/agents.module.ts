@@ -10,6 +10,6 @@ import { AnalyticsModule } from '../analytics/analytics.module';
   imports: [PrismaModule, RagModule, AnalyticsModule],
   controllers: [AgentsController],
   providers: [agentService, AgentExecutorService],
-  exports: [agentService, AgentExecutorService]
+  exports: [agentService, AgentExecutorService],
 })
 export class AgentsModule {}

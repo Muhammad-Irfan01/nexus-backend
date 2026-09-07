@@ -1,6 +1,5 @@
-import { Role } from "@prisma/client"
+import { Role } from '@prisma/client';
 
 export class UpdateRoleDto {
-
-    role: Role
+  role: Role;
 }

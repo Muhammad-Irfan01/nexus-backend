@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { agentService } from './services/agent.service';
 import { AgentExecutorService } from './services/agent-executor.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -8,35 +17,59 @@ import { CreateAgentDto } from './dto/create-agent.dto';
 @Controller('agents')
 @UseGuards(JwtAuthGuard)
 export class AgentsController {
-    constructor( private readonly agentservice: agentService, private readonly agentexecution: AgentExecutorService) {}
+  constructor(
+    private readonly agentservice: agentService,
+    private readonly agentexecution: AgentExecutorService,
+  ) {}
 
-    @Post('workspace/:workspaceId')
-    async createAgent( @CurrentUser('sub') userId: string, @Param('workspaceId') workspaceId: string, @Body() dto: CreateAgentDto) {
-        return this.agentservice.createAgent(workspaceId, userId, dto);
-    }
+  @Post('workspace/:workspaceId')
+  async createAgent(
+    @CurrentUser('sub') userId: string,
+    @Param('workspaceId') workspaceId: string,
+    @Body() dto: CreateAgentDto,
+  ) {
+    return this.agentservice.createAgent(workspaceId, userId, dto);
+  }
 
-    @Get('workspace/:workspaceId')
-    async getAgents( @CurrentUser('sub') userId: string, @Param('workspaceId') workspaceId: string) {
-        return this.agentservice.getAgents(userId, workspaceId,);
-    }
+  @Get('workspace/:workspaceId')
+  async getAgents(
+    @CurrentUser('sub') userId: string,
+    @Param('workspaceId') workspaceId: string,
+  ) {
+    return this.agentservice.getAgents(userId, workspaceId);
+  }
 
-    @Get(':agentId')
-    async getAgent( @CurrentUser('sub') userId: string, @Param('agentId') agentId: string) {
-        return this.agentservice.getAgent(userId, agentId);
-    }
+  @Get(':agentId')
+  async getAgent(
+    @CurrentUser('sub') userId: string,
+    @Param('agentId') agentId: string,
+  ) {
+    return this.agentservice.getAgent(userId, agentId);
+  }
 
-    @Patch(':agentId')
-    async updateAgent( @CurrentUser('sub') userId: string, @Param('agentId') agentId: string, @Body() dto: CreateAgentDto) {
-        return this.agentservice.updateAgent(userId, agentId, dto);
-    }
+  @Patch(':agentId')
+  async updateAgent(
+    @CurrentUser('sub') userId: string,
+    @Param('agentId') agentId: string,
+    @Body() dto: CreateAgentDto,
+  ) {
+    return this.agentservice.updateAgent(userId, agentId, dto);
+  }
 
-    @Delete(':agentId')
-    async deleteAgent( @CurrentUser('sub') userId: string, @Param('agentId') agentId: string) {
-        return this.agentservice.deleteAgent(userId, agentId);
-    }
+  @Delete(':agentId')
+  async deleteAgent(
+    @CurrentUser('sub') userId: string,
+    @Param('agentId') agentId: string,
+  ) {
+    return this.agentservice.deleteAgent(userId, agentId);
+  }
 
-    @Post(':agentId/execute')
-    async executeAgent( @CurrentUser('sub') userId: string, @Param('agentId') agentId: string, @Body() message: { message: string }) {
-        return this.agentexecution.executeAgent(agentId, userId, message.message);
-    }
+  @Post(':agentId/execute')
+  async executeAgent(
+    @CurrentUser('sub') userId: string,
+    @Param('agentId') agentId: string,
+    @Body() message: { message: string },
+  ) {
+    return this.agentexecution.executeAgent(agentId, userId, message.message);
+  }
 }

@@ -1,17 +1,15 @@
-import { IsOptional, IsString } from "class-validator";
-
+import { IsOptional, IsString } from 'class-validator';
 
 export class UpdateWorkspaceDto {
+  @IsOptional()
+  @IsString()
+  name?: string;
 
-    @IsOptional()
-    @IsString()
-    name?: string;
+  @IsOptional()
+  @IsString()
+  description?: string;
 
-    @IsOptional()
-    @IsString()
-    description?: string;
-
-    @IsOptional()
-    @IsString()
-    logo?: string;
+  @IsOptional()
+  @IsString()
+  logo?: string;
 }

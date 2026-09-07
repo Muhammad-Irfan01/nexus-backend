@@ -9,6 +9,6 @@ import { AnalyticsModule } from '../analytics/analytics.module';
 @Module({
   imports: [PrismaModule, RagModule, AnalyticsModule],
   providers: [ChatService, ConversationService],
-  controllers: [ChatController]
+  controllers: [ChatController],
 })
 export class ChatModule {}

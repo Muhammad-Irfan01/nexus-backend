@@ -21,13 +21,11 @@ export class ChatService {
     await this.prisma.message.create({
       data: { conversationId, role: 'USER', content: message },
     });
-    // console.log('123')
     const response = await this.ragservice.ask(
       userID,
       message,
       conversation.workspaceId,
     );
-    // console.log(response);
     await this.prisma.message.create({
       data: { conversationId, role: 'ASSISTANT', content: response.answer },
     });

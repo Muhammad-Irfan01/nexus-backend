@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "rootDir": "src",
-    "module": "CommonJS",
-    "moduleResolution": "node",
+    "module": "node16",
+    "moduleResolution": "node16",
     "esModuleInterop": true,
     "isolatedModules": true,
     "declaration": true,

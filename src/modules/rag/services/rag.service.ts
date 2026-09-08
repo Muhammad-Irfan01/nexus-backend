@@ -22,12 +22,7 @@ export class RagService {
       select: { id: true },
     });
     const workspaceDocumentIds = workspaceDocuments.map((doc) => doc.id);
-    console.log(
-      `[DEBUG] RagService.ask: workspaceId=${workspaceId}, found ${workspaceDocuments.length} documents. IDs: ${workspaceDocumentIds}`,
-    );
-
-    // Filter by workspace at the Qdrant query level instead of fetching
-    // 20 global matches and hoping enough of them belong to this workspace.
+  
     const rawResults = await this.retrival.retrive(
       question,
       20,
@@ -36,15 +31,9 @@ export class RagService {
     const results = Array.isArray(rawResults)
       ? rawResults
       : rawResults?.points || [];
-    console.log(
-      `[DEBUG] RagService.ask: Qdrant search returned ${results.length} results.`,
-    );
 
     const filteredMatch = (results as any[]).filter((item: any) =>
       workspaceDocumentIds.includes(item.payload.documentId),
-    );
-    console.log(
-      `[DEBUG] RagService.ask: After filtering, ${filteredMatch.length} results remain.`,
     );
 
     if (filteredMatch.length === 0) {
